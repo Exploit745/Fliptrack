@@ -129,6 +129,8 @@
       </div>
     </div>
     <div class="actions header-actions">
+      <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+      <button onclick="document.getElementById('csvFileInput').click()">Import CSV</button>
       <button onclick="exportCSV()">Export CSV</button>
       <button class="danger" onclick="clearAll()">Clear All</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
@@ -351,7 +353,7 @@
       }
 
       // Filtering for Table
-      const searchString = `${item.name} ${item.brand} ${item.model} ${item.notes}`.toLowerCase();
+      const searchString = `${item.name}${item.brand} ${item.model}${item.notes}`.toLowerCase();
       const matchesSearch = searchString.includes(search);
       const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
 
@@ -482,7 +484,7 @@
     }
   }
 
-  // --- CSV EXPORT ---
+  // --- CSV EXPORT & IMPORT ---
   function exportCSV() {
     if (inventory.length === 0) return alert('No inventory to export.');
 
@@ -515,6 +517,82 @@
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const rows = [];
+      let row = [];
+      let inQuotes = false;
+      let val = '';
+      
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (char === '"' && text[i+1] === '"') {
+          val += '"'; 
+          i++; 
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          row.push(val); 
+          val = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && text[i+1] === '\n') i++; 
+          row.push(val); 
+          if (row.length > 0) rows.push(row); 
+          row = []; 
+          val = '';
+        } else {
+          val += char;
+        }
+      }
+      if (val || row.length > 0) {
+        row.push(val);
+        rows.push(row);
+      }
+
+      let importedCount = 0;
+      
+      const unescapeHTML = (str) => {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+      };
+
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (r.length < 11) continue;
+
+        const newItem = {
+          id: crypto.randomUUID(),
+          name: unescapeHTML(r[0]),
+          brand: unescapeHTML(r[1]),
+          model: unescapeHTML(r[2]),
+          date: r[3],
+          cost: parseFloat(r[4]) || 0,
+          expectedSale: parseFloat(r[5]) || 0,
+          actualSale: r[6].trim() === '' ? '' : parseFloat(r[6]),
+          fees: parseFloat(r[7]) || 0,
+          shipping: parseFloat(r[8]) || 0,
+          status: r[10] || 'Purchased',
+          notes: unescapeHTML(r[11] || '')
+        };
+        
+        inventory.unshift(newItem);
+        importedCount++;
+      }
+      
+      saveAndRender();
+      alert(`Successfully imported ${importedCount} items.`);
+      event.target.value = ''; 
+    };
+    
+    reader.readAsText(file);
   }
 
   // Initialize
