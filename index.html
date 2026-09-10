@@ -66,7 +66,7 @@
 
   /* TABLE */
   .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); margin-bottom: 25px; }
-  .table { width: 100%; border-collapse: collapse; min-width: 900px; text-align: left; }
+  .table { width: 100%; border-collapse: collapse; min-width: 950px; text-align: left; }
   .table th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 12px 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
   .table td { padding: 12px 15px; border-bottom: 1px solid #20232a; vertical-align: middle; white-space: nowrap; }
   .table tr:hover { background: rgba(0,234,255,.025); }
@@ -83,15 +83,14 @@
   .status-hold { color: var(--purple); background: rgba(196, 167, 255, 0.1); border-color: rgba(196, 167, 255, 0.3); }
   .status-dead { color: var(--red); background: rgba(255, 95, 109, 0.1); border-color: rgba(255, 95, 109, 0.3); }
 
+  /* TIER TAG PILLS */
+  .tier-tag { display: inline-block; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; border: 1px solid var(--border); background: #1a1e26; color: var(--muted); margin-top: 4px; }
+  .tier-quick { color: var(--green); border-color: rgba(88,230,139,0.3); background: rgba(88,230,139,0.06); }
+  .tier-long { color: var(--purple); border-color: rgba(196,167,255,0.3); background: rgba(196,167,255,0.06); }
+  .tier-project { color: var(--yellow); border-color: rgba(253,255,85,0.3); background: rgba(253,255,85,0.06); }
+
   .action-btns button { padding: 5px 10px; font-size: 11px; margin-right: 4px; }
   .empty { text-align: center; color: var(--muted); padding: 40px; }
-
-  /* GUIDES */
-  .guides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 40px; }
-  .guide-card h3 { font-size: 14px; margin-bottom: 10px; color: #fff; }
-  .guide-card ul { margin: 0; padding-left: 0; list-style: none; color: #c6cbd2; font-size: 13px; }
-  .guide-card ul li { margin-bottom: 6px; display: flex; gap: 8px; }
-  .guide-card ul li::before { content: '•'; color: var(--accent); }
 
   /* PASSWORD GATE OVERLAY */
   #passOverlay {
@@ -206,6 +205,7 @@
       <thead>
         <tr>
           <th>Item</th>
+          <th>Age / Days</th>
           <th>Cost</th>
           <th>Expected Sale</th>
           <th>Actual Sale</th>
@@ -220,29 +220,6 @@
         <!-- Dynamic Content -->
       </tbody>
     </table>
-  </div>
-
-  <div class="guides-grid">
-    <div class="card guide-card">
-      <h3>🟢 BUY CHECK</h3>
-      <ul>
-        <li>Exact model identified</li>
-        <li>Multiple sold comps</li>
-        <li>Condition checked/tested</li>
-        <li>Shipping is manageable</li>
-        <li>Profit is worth the time</li>
-      </ul>
-    </div>
-    <div class="card guide-card">
-      <h3>📦 SELL CHECK</h3>
-      <ul>
-        <li>Clear photos of every side</li>
-        <li>Model/serial shown</li>
-        <li>Flaws disclosed</li>
-        <li>Accurate weight & dimensions</li>
-        <li>Price based on sold comps</li>
-      </ul>
-    </div>
   </div>
 </div>
 
@@ -280,6 +257,14 @@
             <option value="Sold">Sold</option>
             <option value="Hold">Hold</option>
             <option value="Dead">Dead</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Flip Tier / Tag</label>
+          <select id="itemTier">
+            <option value="Quick Flip">⚡ Quick Flip</option>
+            <option value="Long Tail">📦 Long Tail</option>
+            <option value="Project">🛠️ Project / Repair</option>
           </select>
         </div>
         <div class="form-group">
@@ -333,10 +318,7 @@
   const db = getFirestore(app);
 
   let inventory = [];
-
-  // --- PASSWORD GATE CONFIG ---
-  // CHANGE THIS TO WHATEVER PASSWORD YOU WANT:
-  const MASTER_PASSWORD = "thriftflip123"; // <-- Change this to your desired password
+  const MASTER_PASSWORD = "thriftflip123"; 
 
   window.handlePasswordUnlock = function(e) {
     e.preventDefault();
@@ -359,7 +341,6 @@
     renderTable();
   };
 
-  // Check on load if already unlocked in this browser session
   window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('fliptrack_unlocked') === 'true') {
       document.getElementById('passOverlay').classList.add('hidden');
@@ -367,7 +348,6 @@
     }
   });
 
-  // --- CLOUD SYNC LOGIC ---
   async function loadData() {
     try {
       const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
@@ -394,6 +374,7 @@
       model: document.getElementById('itemModel').value.trim(),
       date: document.getElementById('itemDate').value,
       status: document.getElementById('itemStatus').value,
+      tier: document.getElementById('itemTier').value,
       cost: parseFloat(document.getElementById('itemCost').value) || 0,
       expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0,
       actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value),
@@ -435,6 +416,15 @@
       }
     }
   };
+
+  function calculateDaysInStock(dateStr) {
+    if (!dateStr) return '—';
+    const purchaseDate = new Date(dateStr);
+    const today = new Date();
+    const diffTime = today - purchaseDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays < 0 ? '0d' : `${diffDays}d`;
+  }
 
   function calculateProfit(item) {
     const cost = parseFloat(item.cost) || 0;
@@ -488,7 +478,7 @@
         realizedProfit += calculateProfit(item);
       }
 
-      const searchString = `${item.name} ${item.brand} ${item.model} ${item.notes}`.toLowerCase();
+      const searchString = `${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase();
       const matchesSearch = searchString.includes(search);
       const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
 
@@ -498,13 +488,19 @@
         const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
         const profitPrefix = profit >= 0 ? '+' : '';
         const actualDisplay = (item.actualSale === null || item.actualSale === '') ? '—' : formatMoney(item.actualSale);
+        
+        let tierClass = 'tier-quick';
+        if (item.tier === 'Long Tail') tierClass = 'tier-long';
+        if (item.tier === 'Project') tierClass = 'tier-project';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>
             <span class="item-main">${escapeHTML(item.name)}</span>
             <span class="item-sub">${escapeHTML(item.brand)} ${item.brand && item.model ? '•' : ''} ${escapeHTML(item.model)}</span>
+            <span class="tier-tag ${tierClass}">${escapeHTML(item.tier || 'Quick Flip')}</span>
           </td>
+          <td style="font-weight: 600; color: var(--muted);">${calculateDaysInStock(item.date)}</td>
           <td>${formatMoney(item.cost)}</td>
           <td>${formatMoney(item.expectedSale)}</td>
           <td>${actualDisplay}</td>
@@ -522,7 +518,7 @@
     });
 
     if (filteredCount === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty">No items found in cloud database. Hit <b>+ Add Item</b>.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="empty">No items found in cloud database. Hit <b>+ Add Item</b>.</td></tr>`;
     }
 
     document.getElementById('stat-invested').innerText = formatMoney(invested);
@@ -539,6 +535,7 @@
     document.getElementById('itemForm').reset();
     document.getElementById('itemId').value = '';
     document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('itemTier').value = 'Quick Flip';
     document.getElementById('modalTitle').innerText = 'Add Item';
     document.getElementById('modalOverlay').classList.add('active');
   };
@@ -553,6 +550,7 @@
     document.getElementById('itemModel').value = item.model || '';
     document.getElementById('itemDate').value = item.date || '';
     document.getElementById('itemStatus').value = item.status || 'Purchased';
+    document.getElementById('itemTier').value = item.tier || 'Quick Flip';
     document.getElementById('itemCost').value = item.cost ?? '';
     document.getElementById('itemExpected').value = item.expectedSale ?? '';
     document.getElementById('itemActual').value = item.actualSale ?? '';
@@ -575,13 +573,14 @@
   window.exportCSV = function() {
     if (inventory.length === 0) return alert('No inventory to export.');
 
-    const headers = ['Item', 'Brand', 'Model', 'Purchase Date', 'Cost', 'Expected Sale', 'Actual Sale', 'Fees', 'Shipping', 'Profit', 'Status', 'Notes'];
+    const headers = ['Item', 'Brand', 'Model', 'Tier', 'Purchase Date', 'Cost', 'Expected Sale', 'Actual Sale', 'Fees', 'Shipping', 'Profit', 'Status', 'Notes'];
     
     const rows = inventory.map(item => {
       return [
         `"${escapeHTML(item.name)}"`,
         `"${escapeHTML(item.brand)}"`,
         `"${escapeHTML(item.model)}"`,
+        `"${escapeHTML(item.tier)}"`,
         `"${item.date}"`,
         item.cost || 0,
         item.expectedSale || 0,
@@ -590,7 +589,7 @@
         item.shipping || 0,
         calculateProfit(item),
         item.status,
-        `"${escapeHTML(item.notes).resetAllQuotes?.() || escapeHTML(item.notes).replace(/"/g, '""')}"`
+        `"${escapeHTML(item.notes).replace(/"/g, '""')}"`
       ].join(',');
     });
 
