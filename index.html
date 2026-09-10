@@ -129,8 +129,6 @@
       </div>
     </div>
     <div class="actions header-actions">
-      <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
-      <button onclick="document.getElementById('csvFileInput').click()">Import CSV</button>
       <button onclick="exportCSV()">Export CSV</button>
       <button class="danger" onclick="clearAll()">Clear All</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
@@ -286,29 +284,92 @@
   </div>
 </div>
 
-<script>
-  // --- STATE MANAGEMENT ---
-  const STORAGE_KEY = 'fliptrack_items';
-  let inventory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // --- SECURITY ---
-  const escapeHTML = (str) => {
-    if (!str) return '';
-    return String(str).replace(/[&<>'"]/g, tag => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[tag]));
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
+    authDomain: "fliptrack-2d4ec.firebaseapp.com",
+    projectId: "fliptrack-2d4ec",
+    storageBucket: "fliptrack-2d4ec.firebasestorage.app",
+    messagingSenderId: "344166473976",
+    appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d",
+    measurementId: "G-4XQLB5WCN"
   };
 
-  // --- CORE LOGIC ---
-  function saveAndRender() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-    renderTable();
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let inventory = [];
+
+  async function loadData() {
+    try {
+      const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
+      inventory = [];
+      querySnapshot.forEach((document) => {
+        inventory.push({ id: document.id, ...document.data() });
+      });
+      renderTable();
+    } catch (error) {
+      console.error("Error loading data: ", error);
+    }
   }
 
-  function formatMoney(num) {
-    if (num === null || num === undefined || isNaN(num) || num === '') return '—';
-    return '$' + parseFloat(num).toFixed(2);
-  }
+  window.handleFormSubmit = async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('itemId').value || crypto.randomUUID();
+    const name = document.getElementById('itemName').value.trim();
+    if (!name) { alert('Give the item a name.'); return; }
+
+    const itemData = {
+      name: name,
+      brand: document.getElementById('itemBrand').value.trim(),
+      model: document.getElementById('itemModel').value.trim(),
+      date: document.getElementById('itemDate').value,
+      status: document.getElementById('itemStatus').value,
+      cost: parseFloat(document.getElementById('itemCost').value) || 0,
+      expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0,
+      actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value),
+      fees: parseFloat(document.getElementById('itemFees').value) || 0,
+      shipping: parseFloat(document.getElementById('itemShipping').value) || 0,
+      notes: document.getElementById('itemNotes').value.trim()
+    };
+
+    try {
+      await setDoc(doc(db, "fliptrack_items", id), itemData);
+      closeModal();
+      loadData();
+    } catch (error) {
+      console.error("Error saving document: ", error);
+      alert("Failed to save item to cloud.");
+    }
+  };
+
+  window.deleteItem = async function(id) {
+    if (confirm('Delete this item from cloud storage?')) {
+      try {
+        await deleteDoc(doc(db, "fliptrack_items", id));
+        loadData();
+      } catch (error) {
+        console.error("Error deleting document: ", error);
+      }
+    }
+  };
+
+  window.clearAll = async function() {
+    if (confirm('Delete ALL tracked items from the cloud database? This cannot be undone.')) {
+      try {
+        const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
+        const deletePromises = querySnapshot.docs.map((d) => deleteDoc(doc(db, "fliptrack_items", d.id)));
+        await Promise.all(deletePromises);
+        loadData();
+      } catch (error) {
+        console.error("Error clearing data: ", error);
+      }
+    }
+  };
 
   function calculateProfit(item) {
     const cost = parseFloat(item.cost) || 0;
@@ -324,7 +385,18 @@
     }
   }
 
-  // --- RENDER ---
+  function formatMoney(num) {
+    if (num === null || num === undefined || isNaN(num) || num === '') return '—';
+    return '$' + parseFloat(num).toFixed(2);
+  }
+
+  const escapeHTML = (str) => {
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag]));
+  };
+
   function renderTable() {
     const tbody = document.getElementById('tableBody');
     const search = document.getElementById('searchInput').value.toLowerCase();
@@ -339,7 +411,6 @@
     let filteredCount = 0;
 
     inventory.forEach(item => {
-      // Calculate Global Stats
       const cost = parseFloat(item.cost) || 0;
       invested += cost;
       
@@ -352,8 +423,7 @@
         realizedProfit += calculateProfit(item);
       }
 
-      // Filtering for Table
-      const searchString = `${item.name}${item.brand} ${item.model}${item.notes}`.toLowerCase();
+      const searchString = `${item.name} ${item.brand} ${item.model} ${item.notes}`.toLowerCase();
       const matchesSearch = searchString.includes(search);
       const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
 
@@ -387,10 +457,9 @@
     });
 
     if (filteredCount === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty">No items found. Find something cool and hit <b>+ Add Item</b>.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="empty">No items found in cloud database. Hit <b>+ Add Item</b>.</td></tr>`;
     }
 
-    // Update Stats
     document.getElementById('stat-invested').innerText = formatMoney(invested);
     document.getElementById('stat-expected').innerText = formatMoney(expectedRevenue);
     
@@ -401,55 +470,15 @@
     document.getElementById('stat-sold-count').innerText = itemsSold;
   }
 
-  // --- MODAL & FORM LOGIC ---
-  function openModal() {
+  window.openModal = function() {
     document.getElementById('itemForm').reset();
     document.getElementById('itemId').value = '';
     document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10);
     document.getElementById('modalTitle').innerText = 'Add Item';
     document.getElementById('modalOverlay').classList.add('active');
-  }
+  };
 
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
-  }
-
-  function closeOnOutsideClick(e) {
-    if (e.target.id === 'modalOverlay') closeModal();
-  }
-
-  function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    const id = document.getElementById('itemId').value || crypto.randomUUID();
-    
-    const itemData = {
-      id: id,
-      name: document.getElementById('itemName').value.trim(),
-      brand: document.getElementById('itemBrand').value.trim(),
-      model: document.getElementById('itemModel').value.trim(),
-      date: document.getElementById('itemDate').value,
-      status: document.getElementById('itemStatus').value,
-      cost: document.getElementById('itemCost').value,
-      expectedSale: document.getElementById('itemExpected').value,
-      actualSale: document.getElementById('itemActual').value,
-      fees: document.getElementById('itemFees').value,
-      shipping: document.getElementById('itemShipping').value,
-      notes: document.getElementById('itemNotes').value.trim()
-    };
-
-    const existingIndex = inventory.findIndex(i => i.id === id);
-    if (existingIndex > -1) {
-      inventory[existingIndex] = itemData; // Update
-    } else {
-      inventory.unshift(itemData); // Add new to top
-    }
-
-    closeModal();
-    saveAndRender();
-  }
-
-  function editItem(id) {
+  window.editItem = function(id) {
     const item = inventory.find(i => i.id === id);
     if (!item) return;
 
@@ -468,24 +497,17 @@
     
     document.getElementById('modalTitle').innerText = 'Edit Item';
     document.getElementById('modalOverlay').classList.add('active');
-  }
+  };
 
-  function deleteItem(id) {
-    if (confirm('Delete this item?')) {
-      inventory = inventory.filter(i => i.id !== id);
-      saveAndRender();
-    }
-  }
+  window.closeModal = function() {
+    document.getElementById('modalOverlay').classList.remove('active');
+  };
 
-  function clearAll() {
-    if (confirm('Delete ALL tracked items? This cannot be undone.')) {
-      inventory = [];
-      saveAndRender();
-    }
-  }
+  window.closeOnOutsideClick = function(e) {
+    if (e.target.id === 'modalOverlay') closeModal();
+  };
 
-  // --- CSV EXPORT & IMPORT ---
-  function exportCSV() {
+  window.exportCSV = function() {
     if (inventory.length === 0) return alert('No inventory to export.');
 
     const headers = ['Item', 'Brand', 'Model', 'Purchase Date', 'Cost', 'Expected Sale', 'Actual Sale', 'Fees', 'Shipping', 'Profit', 'Status', 'Notes'];
@@ -517,87 +539,11 @@
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
+  };
 
-  function importCSV(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const text = e.target.result;
-      const rows = [];
-      let row = [];
-      let inQuotes = false;
-      let val = '';
-      
-      for (let i = 0; i < text.length; i++) {
-        let char = text[i];
-        if (char === '"' && text[i+1] === '"') {
-          val += '"'; 
-          i++; 
-        } else if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          row.push(val); 
-          val = '';
-        } else if ((char === '\n' || char === '\r') && !inQuotes) {
-          if (char === '\r' && text[i+1] === '\n') i++; 
-          row.push(val); 
-          if (row.length > 0) rows.push(row); 
-          row = []; 
-          val = '';
-        } else {
-          val += char;
-        }
-      }
-      if (val || row.length > 0) {
-        row.push(val);
-        rows.push(row);
-      }
+  window.renderTable = renderTable;
 
-      let importedCount = 0;
-      
-      const unescapeHTML = (str) => {
-        const txt = document.createElement('textarea');
-        txt.innerHTML = str;
-        return txt.value;
-      };
-
-      for (let i = 1; i < rows.length; i++) {
-        const r = rows[i];
-        if (r.length < 11) continue;
-
-        const newItem = {
-          id: crypto.randomUUID(),
-          name: unescapeHTML(r[0]),
-          brand: unescapeHTML(r[1]),
-          model: unescapeHTML(r[2]),
-          date: r[3],
-          cost: parseFloat(r[4]) || 0,
-          expectedSale: parseFloat(r[5]) || 0,
-          actualSale: r[6].trim() === '' ? '' : parseFloat(r[6]),
-          fees: parseFloat(r[7]) || 0,
-          shipping: parseFloat(r[8]) || 0,
-          status: r[10] || 'Purchased',
-          notes: unescapeHTML(r[11] || '')
-        };
-        
-        inventory.unshift(newItem);
-        importedCount++;
-      }
-      
-      saveAndRender();
-      alert(`Successfully imported ${importedCount} items.`);
-      event.target.value = ''; 
-    };
-    
-    reader.readAsText(file);
-  }
-
-  // Initialize
-  renderTable();
-
+  loadData();
 </script>
 </body>
 </html>
