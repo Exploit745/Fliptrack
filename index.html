@@ -104,7 +104,11 @@
     text-align: center; box-shadow: var(--shadow); max-width: 400px; width: 90%;
   }
   .auth-card h2 { color: var(--accent); margin-bottom: 10px; }
-  .auth-card p { color: var(--muted); margin-bottom: 25px; font-size: 13px; }
+  .auth-card p { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
+  .auth-form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+  .auth-form label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+  .auth-switch { margin-top: 15px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .auth-switch span { color: var(--accent); font-weight: 600; }
 
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
@@ -132,13 +136,28 @@
 </head>
 <body>
 
-<!-- LOGIN GATEWAY -->
+<!-- LOGIN / REGISTER GATEWAY -->
 <div id="authOverlay">
   <div class="auth-card">
     <div class="logo" style="margin: 0 auto 15px auto;">⚡</div>
-    <h2>FlipTrack Auth</h2>
-    <p>Sign in with your Google account to sync your inventory with Firebase.</p>
-    <button class="primary" onclick="loginWithGoogle()" style="width: 100%; padding: 12px;">Sign in with Google</button>
+    <h2 id="authTitle">FlipTrack Login</h2>
+    <p id="authSubtitle">Enter your credentials to access your secure inventory.</p>
+    
+    <form class="auth-form" onsubmit="handleAuthSubmit(event)">
+      <div class="form-group full">
+        <label>Email</label>
+        <input type="email" id="authEmail" required placeholder="pookie@ghstudios.win">
+      </div>
+      <div class="form-group full">
+        <label>Password</label>
+        <input type="password" id="authPassword" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 5px;">Sign In</button>
+    </form>
+    
+    <div class="auth-switch" onclick="toggleAuthMode()">
+      <span id="authSwitchText">Need an account? Sign up</span>
+    </div>
   </div>
 </div>
 
@@ -311,7 +330,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -328,20 +347,31 @@
   const auth = getAuth(app);
 
   let inventory = [];
+  let isRegistering = false;
 
-  // --- AUTH LISTENERS ---
-  window.loginWithGoogle = async function() {
-    const provider = new GoogleAuthProvider();
+  // --- AUTH TOGGLE & LOGIC ---
+  window.toggleAuthMode = function() {
+    isRegistering = !isRegistering;
+    document.getElementById('authTitle').innerText = isRegistering ? 'FlipTrack Register' : 'FlipTrack Login';
+    document.getElementById('authSubtitle').innerText = isRegistering ? 'Create your login credentials.' : 'Enter your credentials to access your secure inventory.';
+    document.getElementById('authSubmitBtn').innerText = isRegistering ? 'Create Account' : 'Sign In';
+    document.getElementById('authSwitchText').innerText = isRegistering ? 'Already have an account? Sign in' : 'Need an account? Sign up';
+  };
+
+  window.handleAuthSubmit = async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.warn("Popup blocked or failed, attempting redirect...", error);
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch (redirectError) {
-        console.error("Redirect auth error: ", redirectError);
-        alert("Google Sign-In failed. Please ensure Google Sign-In is enabled in your Firebase console under Authentication > Sign-in provider.");
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
       }
+    } catch (error) {
+      console.error("Auth error: ", error);
+      alert("Authentication error: " + error.message);
     }
   };
 
