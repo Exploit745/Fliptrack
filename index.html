@@ -93,22 +93,19 @@
   .guide-card ul li { margin-bottom: 6px; display: flex; gap: 8px; }
   .guide-card ul li::before { content: '•'; color: var(--accent); }
 
-  /* AUTH OVERLAY SCREEN */
-  #authOverlay {
+  /* PASSWORD GATE OVERLAY */
+  #passOverlay {
     position: fixed; inset: 0; background: var(--bg); z-index: 2000;
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
   }
-  #authOverlay.hidden { display: none; }
-  .auth-card {
+  #passOverlay.hidden { display: none; }
+  .pass-card {
     background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 16px;
     text-align: center; box-shadow: var(--shadow); max-width: 400px; width: 90%;
   }
-  .auth-card h2 { color: var(--accent); margin-bottom: 10px; }
-  .auth-card p { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
-  .auth-form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
-  .auth-form label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
-  .auth-switch { margin-top: 15px; font-size: 12px; color: var(--muted); cursor: pointer; }
-  .auth-switch span { color: var(--accent); font-weight: 600; }
+  .pass-card h2 { color: var(--accent); margin-bottom: 10px; }
+  .pass-card p { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
+  .pass-form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
 
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
@@ -136,28 +133,19 @@
 </head>
 <body>
 
-<!-- LOGIN / REGISTER GATEWAY -->
-<div id="authOverlay">
-  <div class="auth-card">
+<!-- PASSWORD GATEWAY -->
+<div id="passOverlay">
+  <div class="pass-card">
     <div class="logo" style="margin: 0 auto 15px auto;">⚡</div>
-    <h2 id="authTitle">FlipTrack Login</h2>
-    <p id="authSubtitle">Enter your credentials to access your secure inventory.</p>
-    
-    <form class="auth-form" onsubmit="handleAuthSubmit(event)">
+    <h2>FlipTrack Security</h2>
+    <p>Enter your master password to unlock your live cloud inventory.</p>
+    <form class="pass-form" onsubmit="handlePasswordUnlock(event)">
       <div class="form-group full">
-        <label>Email</label>
-        <input type="email" id="authEmail" required placeholder="pookie@ghstudios.win">
+        <label>Master Password</label>
+        <input type="password" id="masterPasswordInput" required placeholder="Enter password...">
       </div>
-      <div class="form-group full">
-        <label>Password</label>
-        <input type="password" id="authPassword" required placeholder="••••••••">
-      </div>
-      <button type="submit" class="primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: 5px;">Sign In</button>
+      <button type="submit" class="primary" style="width: 100%; padding: 12px; margin-top: 5px;">Unlock Dashboard</button>
     </form>
-    
-    <div class="auth-switch" onclick="toggleAuthMode()">
-      <span id="authSwitchText">Need an account? Sign up</span>
-    </div>
   </div>
 </div>
 
@@ -167,14 +155,14 @@
       <div class="logo">⚡</div>
       <div>
         <h1>FlipTrack</h1>
-        <small id="userEmail">Buying & selling tracker</small>
+        <small>Buying & selling tracker (Cloud)</small>
       </div>
     </div>
     <div class="actions header-actions">
       <button onclick="exportCSV()">Export CSV</button>
       <button class="danger" onclick="clearAll()">Clear All</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
-      <button onclick="logout()">Sign Out</button>
+      <button onclick="lockApp()">Lock App</button>
     </div>
   </header>
 
@@ -330,7 +318,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -344,55 +331,39 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
 
   let inventory = [];
-  let isRegistering = false;
 
-  // --- AUTH TOGGLE & LOGIC ---
-  window.toggleAuthMode = function() {
-    isRegistering = !isRegistering;
-    document.getElementById('authTitle').innerText = isRegistering ? 'FlipTrack Register' : 'FlipTrack Login';
-    document.getElementById('authSubtitle').innerText = isRegistering ? 'Create your login credentials.' : 'Enter your credentials to access your secure inventory.';
-    document.getElementById('authSubmitBtn').innerText = isRegistering ? 'Create Account' : 'Sign In';
-    document.getElementById('authSwitchText').innerText = isRegistering ? 'Already have an account? Sign in' : 'Need an account? Sign up';
-  };
+  // --- PASSWORD GATE CONFIG ---
+  // CHANGE THIS TO WHATEVER PASSWORD YOU WANT:
+  const MASTER_PASSWORD = "thriftflip123"; // <-- Change this to your desired password
 
-  window.handleAuthSubmit = async function(e) {
+  window.handlePasswordUnlock = function(e) {
     e.preventDefault();
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-
-    try {
-      if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-    } catch (error) {
-      console.error("Auth error: ", error);
-      alert("Authentication error: " + error.message);
-    }
-  };
-
-  window.logout = async function() {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Sign out error: ", error);
-    }
-  };
-
-  onAuthStateChanged(auth, (user) => {
-    const overlay = document.getElementById('authOverlay');
-    if (user) {
-      overlay.classList.add('hidden');
-      document.getElementById('userEmail').innerText = user.email;
+    const val = document.getElementById('masterPasswordInput').value;
+    if (val === MASTER_PASSWORD) {
+      localStorage.setItem('fliptrack_unlocked', 'true');
+      document.getElementById('passOverlay').classList.add('hidden');
       loadData();
     } else {
-      overlay.classList.remove('hidden');
-      inventory = [];
-      renderTable();
+      alert("Incorrect password.");
+      document.getElementById('masterPasswordInput').value = '';
+    }
+  };
+
+  window.lockApp = function() {
+    localStorage.removeItem('fliptrack_unlocked');
+    document.getElementById('passOverlay').classList.remove('hidden');
+    document.getElementById('masterPasswordInput').value = '';
+    inventory = [];
+    renderTable();
+  };
+
+  // Check on load if already unlocked in this browser session
+  window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('fliptrack_unlocked') === 'true') {
+      document.getElementById('passOverlay').classList.add('hidden');
+      loadData();
     }
   });
 
@@ -619,7 +590,7 @@
         item.shipping || 0,
         calculateProfit(item),
         item.status,
-        `"${escapeHTML(item.notes).replace(/"/g, '""')}"`
+        `"${escapeHTML(item.notes).resetAllQuotes?.() || escapeHTML(item.notes).replace(/"/g, '""')}"`
       ].join(',');
     });
 
