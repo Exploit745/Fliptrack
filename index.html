@@ -38,7 +38,7 @@
   .brand small { color: var(--muted); }
   
   /* BUTTONS */
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   button { border: 1px solid var(--border); background: var(--panel2); color: var(--text); padding: 9px 13px; border-radius: 9px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
   button:hover { border-color: var(--accent); color: var(--accent); }
   .primary { background: var(--accent); color: #001115; border-color: var(--accent); font-weight: 800; }
@@ -93,6 +93,19 @@
   .guide-card ul li { margin-bottom: 6px; display: flex; gap: 8px; }
   .guide-card ul li::before { content: '•'; color: var(--accent); }
 
+  /* AUTH OVERLAY SCREEN */
+  #authOverlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
+  }
+  #authOverlay.hidden { display: none; }
+  .auth-card {
+    background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 16px;
+    text-align: center; box-shadow: var(--shadow); max-width: 400px; width: 90%;
+  }
+  .auth-card h2 { color: var(--accent); margin-bottom: 10px; }
+  .auth-card p { color: var(--muted); margin-bottom: 25px; font-size: 13px; }
+
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
   .modal-overlay.active { display: flex; }
@@ -119,19 +132,30 @@
 </head>
 <body>
 
+<!-- LOGIN GATEWAY -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="logo" style="margin: 0 auto 15px auto;">⚡</div>
+    <h2>FlipTrack Auth</h2>
+    <p>Sign in with your authorized Google account to access your inventory database.</p>
+    <button class="primary" onclick="loginWithGoogle()" style="width: 100%; padding: 12px;">Sign in with Google</button>
+  </div>
+</div>
+
 <div class="wrap">
   <header>
     <div class="brand">
       <div class="logo">⚡</div>
       <div>
         <h1>FlipTrack</h1>
-        <small>Buying & selling tracker</small>
+        <small id="userEmail">Buying & selling tracker</small>
       </div>
     </div>
     <div class="actions header-actions">
       <button onclick="exportCSV()">Export CSV</button>
       <button class="danger" onclick="clearAll()">Clear All</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
+      <button onclick="logout()">Sign Out</button>
     </div>
   </header>
 
@@ -287,6 +311,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -300,9 +325,43 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   let inventory = [];
 
+  // --- AUTH LISTENERS ---
+  window.loginWithGoogle = async function() {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Auth error: ", error);
+      alert("Sign-in failed. Make sure Google sign-in is enabled in your Firebase console.");
+    }
+  };
+
+  window.logout = async function() {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Sign out error: ", error);
+    }
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    const overlay = document.getElementById('authOverlay');
+    if (user) {
+      overlay.classList.add('hidden');
+      document.getElementById('userEmail').innerText = user.email;
+      loadData();
+    } else {
+      overlay.classList.remove('hidden');
+      inventory = [];
+      renderTable();
+    }
+  });
+
+  // --- CLOUD SYNC LOGIC ---
   async function loadData() {
     try {
       const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
@@ -542,8 +601,6 @@
   };
 
   window.renderTable = renderTable;
-
-  loadData();
 </script>
 </body>
 </html>
