@@ -92,6 +92,13 @@
   .action-btns button { padding: 5px 10px; font-size: 11px; margin-right: 4px; }
   .empty { text-align: center; color: var(--muted); padding: 40px; }
 
+  /* GUIDES */
+  .guides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 40px; }
+  .guide-card h3 { font-size: 14px; margin-bottom: 10px; color: #fff; }
+  .guide-card ul { margin: 0; padding-left: 0; list-style: none; color: #c6cbd2; font-size: 13px; }
+  .guide-card ul li { margin-bottom: 6px; display: flex; gap: 8px; }
+  .guide-card ul li::before { content: '•'; color: var(--accent); }
+
   /* PASSWORD GATE OVERLAY */
   #passOverlay {
     position: fixed; inset: 0; background: var(--bg); z-index: 2000;
@@ -220,6 +227,30 @@
         <!-- Dynamic Content -->
       </tbody>
     </table>
+  </div>
+
+  <!-- RESTORED RULES & GUIDES AT THE BOTTOM -->
+  <div class="guides-grid">
+    <div class="card guide-card">
+      <h3>🟢 BUY CHECK</h3>
+      <ul>
+        <li>Exact model identified</li>
+        <li>Multiple sold comps</li>
+        <li>Condition checked/tested</li>
+        <li>Shipping is manageable</li>
+        <li>Profit is worth the time</li>
+      </ul>
+    </div>
+    <div class="card guide-card">
+      <h3>📦 SELL CHECK</h3>
+      <ul>
+        <li>Clear photos of every side</li>
+        <li>Model/serial shown</li>
+        <li>Flaws disclosed</li>
+        <li>Accurate weight & dimensions</li>
+        <li>Price based on sold comps</li>
+      </ul>
+    </div>
   </div>
 </div>
 
