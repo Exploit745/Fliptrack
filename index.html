@@ -137,7 +137,7 @@
   <div class="auth-card">
     <div class="logo" style="margin: 0 auto 15px auto;">⚡</div>
     <h2>FlipTrack Auth</h2>
-    <p>Sign in with your authorized Google account to access your inventory database.</p>
+    <p>Sign in with your Google account to sync your inventory with Firebase.</p>
     <button class="primary" onclick="loginWithGoogle()" style="width: 100%; padding: 12px;">Sign in with Google</button>
   </div>
 </div>
@@ -311,7 +311,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -335,8 +335,13 @@
     try {
       await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error("Auth error: ", error);
-      alert("Sign-in failed. Make sure Google sign-in is enabled in your Firebase console.");
+      console.warn("Popup blocked or failed, attempting redirect...", error);
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error("Redirect auth error: ", redirectError);
+        alert("Google Sign-In failed. Please ensure Google Sign-In is enabled in your Firebase console under Authentication > Sign-in provider.");
+      }
     }
   };
 
