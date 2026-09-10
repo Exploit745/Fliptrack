@@ -27,7 +27,7 @@
     font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
   }
   button, input, select, textarea { font: inherit; }
-  .wrap { max-width: 1250px; margin: auto; padding: 24px; }
+  .wrap { max-width: 1350px; margin: auto; padding: 24px; }
   
   /* HEADER */
   header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -37,20 +37,22 @@
   .brand h1 { margin: 0; font-size: 22px; color: var(--text); }
   .brand small { color: var(--muted); }
   
-  /* BUTTONS */
+  /* BUTTONS & TOOLBARS */
   .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  button { border: 1px solid var(--border); background: var(--panel2); color: var(--text); padding: 9px 13px; border-radius: 9px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
-  button:hover { border-color: var(--accent); color: var(--accent); }
+  button, .btn-label { display: inline-block; text-align: center; border: 1px solid var(--border); background: var(--panel2); color: var(--text); padding: 9px 13px; border-radius: 9px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 13px; }
+  button:hover, .btn-label:hover { border-color: var(--accent); color: var(--accent); }
   .primary { background: var(--accent); color: #001115; border-color: var(--accent); font-weight: 800; }
   .primary:hover { color: #001115; filter: brightness(1.05); box-shadow: 0 0 10px rgba(0, 234, 255, 0.3); }
   .danger { color: var(--red); border-color: rgba(255, 95, 109, 0.3); }
   .danger:hover { background: rgba(255, 95, 109, 0.1); border-color: var(--red); color: var(--red); }
+  .special { color: var(--purple); border-color: rgba(196, 167, 255, 0.3); }
+  .special:hover { background: rgba(196, 167, 255, 0.1); border-color: var(--purple); }
 
   /* STATS */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
   .card { background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 17px; box-shadow: var(--shadow); }
-  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat .value { font-size: 25px; font-weight: 850; margin-top: 5px; }
+  .stat .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat .value { font-size: 22px; font-weight: 850; margin-top: 5px; }
   .profit-positive { color: var(--green); }
   .profit-negative { color: var(--red); }
   
@@ -58,18 +60,23 @@
   .notice { border-left: 3px solid var(--yellow); background: rgba(253,255,85,.045); padding: 11px 13px; border-radius: 8px; color: #d8dae0; margin-bottom: 18px; font-size: 13px; }
 
   /* TOOLBAR */
-  .toolbar { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-  .toolbar input { flex-grow: 1; min-width: 250px; }
-  .toolbar select { min-width: 150px; }
+  .toolbar { display: flex; justify-content: space-between; gap: 9px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+  .search-filters { display: flex; gap: 9px; flex-grow: 1; }
+  .search-filters input { flex-grow: 1; min-width: 200px; }
+  .bulk-actions { display: flex; gap: 9px; align-items: center; background: var(--panel2); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--border); }
+  .bulk-actions select { padding: 6px; font-size: 12px; }
+  
   input, select, textarea { background: #0c0e12; color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 10px; outline: none; width: 100%; }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,234,255,.08); }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
   /* TABLE */
   .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); margin-bottom: 25px; }
-  .table { width: 100%; border-collapse: collapse; min-width: 950px; text-align: left; }
+  .table { width: 100%; border-collapse: collapse; min-width: 1000px; text-align: left; }
   .table th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 12px 15px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
   .table td { padding: 12px 15px; border-bottom: 1px solid #20232a; vertical-align: middle; white-space: nowrap; }
   .table tr:hover { background: rgba(0,234,255,.025); }
+  .table tr.selected { background: rgba(0,234,255,.05); }
   
   .item-main { font-weight: 750; color: #fff; display: block; }
   .item-sub { font-size: 11px; color: var(--muted); }
@@ -83,7 +90,6 @@
   .status-hold { color: var(--purple); background: rgba(196, 167, 255, 0.1); border-color: rgba(196, 167, 255, 0.3); }
   .status-dead { color: var(--red); background: rgba(255, 95, 109, 0.1); border-color: rgba(255, 95, 109, 0.3); }
 
-  /* TIER TAG PILLS */
   .tier-tag { display: inline-block; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; border: 1px solid var(--border); background: #1a1e26; color: var(--muted); margin-top: 4px; }
   .tier-quick { color: var(--green); border-color: rgba(88,230,139,0.3); background: rgba(88,230,139,0.06); }
   .tier-long { color: var(--purple); border-color: rgba(196,167,255,0.3); background: rgba(196,167,255,0.06); }
@@ -92,7 +98,7 @@
   .action-btns button { padding: 5px 10px; font-size: 11px; margin-right: 4px; }
   .empty { text-align: center; color: var(--muted); padding: 40px; }
 
-  /* GUIDES */
+  /* GUIDES & BOLOS */
   .guides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 40px; }
   .guide-card h3 { font-size: 14px; margin-bottom: 10px; color: #fff; }
   .guide-card ul { margin: 0; padding-left: 0; list-style: none; color: #c6cbd2; font-size: 13px; }
@@ -100,20 +106,14 @@
   .guide-card ul li::before { content: '•'; color: var(--accent); }
 
   /* PASSWORD GATE OVERLAY */
-  #passOverlay {
-    position: fixed; inset: 0; background: var(--bg); z-index: 2000;
-    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
-  }
+  #passOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
   #passOverlay.hidden { display: none; }
-  .pass-card {
-    background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 16px;
-    text-align: center; box-shadow: var(--shadow); max-width: 400px; width: 90%;
-  }
+  .pass-card { background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 16px; text-align: center; box-shadow: var(--shadow); max-width: 400px; width: 90%; }
   .pass-card h2 { color: var(--accent); margin-bottom: 10px; }
   .pass-card p { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
   .pass-form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
 
-  /* MODAL */
+  /* MODALS */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
   .modal-overlay.active { display: flex; }
   .modal { width: min(760px, 100%); max-height: 92vh; overflow-y: auto; background: #101216; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
@@ -130,10 +130,17 @@
   
   .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 
+  /* EXPENSE MODAL SPECIFICS */
+  .expense-list { margin-top: 20px; border: 1px solid var(--border); border-radius: 9px; max-height: 300px; overflow-y: auto; }
+  .expense-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; }
+  .expense-item:last-child { border-bottom: none; }
+  .expense-item button { padding: 4px 8px; font-size: 10px; }
+
   @media(max-width: 768px){ 
     .form-grid { grid-template-columns: 1fr; }
     .header-actions { width: 100%; } 
-    .header-actions button { flex-grow: 1; } 
+    .header-actions button, .header-actions label { flex-grow: 1; } 
+    .toolbar { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
@@ -165,8 +172,12 @@
       </div>
     </div>
     <div class="actions header-actions">
+      <button class="special" onclick="openExpenseModal()">💸 Expenses</button>
+      
+      <label for="csvUpload" class="btn-label">Import CSV</label>
+      <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
+      
       <button onclick="exportCSV()">Export CSV</button>
-      <button class="danger" onclick="clearAll()">Clear All</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
       <button onclick="lockApp()">Lock App</button>
     </div>
@@ -178,39 +189,55 @@
       <div class="value" id="stat-invested" style="color: var(--yellow)">$0.00</div>
     </div>
     <div class="card stat">
-      <div class="label">Expected Revenue</div>
+      <div class="label">Expected Rev.</div>
       <div class="value" id="stat-expected" style="color: var(--accent)">$0.00</div>
     </div>
     <div class="card stat">
-      <div class="label">Realized Profit</div>
-      <div class="value profit-positive" id="stat-realized">$0.00</div>
+      <div class="label">Gross Profit</div>
+      <div class="value" id="stat-gross">$0.00</div>
     </div>
     <div class="card stat">
-      <div class="label">Items Sold</div>
-      <div class="value" id="stat-sold-count">0</div>
+      <div class="label">Total Expenses</div>
+      <div class="value profit-negative" id="stat-expenses">$0.00</div>
+    </div>
+    <div class="card stat" style="border-color: var(--green); background: rgba(88,230,139,0.05);">
+      <div class="label" style="color: var(--green);">True Net Profit</div>
+      <div class="value profit-positive" id="stat-net">$0.00</div>
     </div>
   </section>
 
-  <div class="notice">
-    💡 <b>Flip rule:</b> research the exact model, check sold comps, calculate fees + shipping, then decide. Listed prices are not proof of value.
-  </div>
-
   <div class="toolbar">
-    <input type="text" id="searchInput" placeholder="Search item, brand, model, notes..." oninput="renderTable()">
-    <select id="statusFilter" onchange="renderTable()">
-      <option value="All">All statuses</option>
-      <option value="Purchased">Purchased</option>
-      <option value="Listed">Listed</option>
-      <option value="Sold">Sold</option>
-      <option value="Hold">Hold</option>
-      <option value="Dead">Dead</option>
-    </select>
+    <div class="search-filters">
+      <input type="text" id="searchInput" placeholder="Search item, brand, model, notes..." oninput="renderTable()">
+      <select id="statusFilter" onchange="renderTable()">
+        <option value="All">All statuses</option>
+        <option value="Purchased">Purchased</option>
+        <option value="Listed">Listed</option>
+        <option value="Sold">Sold</option>
+        <option value="Hold">Hold</option>
+        <option value="Dead">Dead</option>
+      </select>
+    </div>
+    
+    <div class="bulk-actions" id="bulkActions" style="opacity: 0.5; pointer-events: none;">
+      <span style="font-size: 11px; font-weight: bold; color: var(--muted); text-transform: uppercase;">Batch Action:</span>
+      <select id="bulkStatusSelect" style="min-width: 120px;">
+        <option value="Purchased">Set: Purchased</option>
+        <option value="Listed">Set: Listed</option>
+        <option value="Sold">Set: Sold</option>
+        <option value="Hold">Set: Hold</option>
+        <option value="Dead">Set: Dead</option>
+      </select>
+      <button onclick="applyBulkStatus()" style="padding: 6px 12px; font-size: 11px;">Apply</button>
+      <button class="danger" onclick="deleteSelected()" style="padding: 6px 12px; font-size: 11px;">Del</button>
+    </div>
   </div>
 
   <div class="table-wrap">
     <table class="table" id="inventoryTable">
       <thead>
         <tr>
+          <th style="width: 30px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
           <th>Item</th>
           <th>Age / Days</th>
           <th>Cost</th>
@@ -229,7 +256,7 @@
     </table>
   </div>
 
-  <!-- RESTORED RULES & GUIDES AT THE BOTTOM -->
+  <!-- RESTORED RULES, GUIDES, & BOLO -->
   <div class="guides-grid">
     <div class="card guide-card">
       <h3>🟢 BUY CHECK</h3>
@@ -251,11 +278,21 @@
         <li>Price based on sold comps</li>
       </ul>
     </div>
+    <div class="card guide-card">
+      <h3>👀 BOLO BRANDS</h3>
+      <ul>
+        <li><b>Clothes:</b> Vintage Levi's, Arc'teryx, Carhartt WIP</li>
+        <li><b>Tech:</b> Sony Walkmans, TI-84s, vintage Apple</li>
+        <li><b>Shoes:</b> Hokas, Red Wings, retro Jordans</li>
+        <li><b>Media:</b> Sealed VHS, niche DVD box sets</li>
+        <li><b>Home:</b> Pyrex, Mid-Century Modern decor</li>
+      </ul>
+    </div>
   </div>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeOnOutsideClick(event)">
+<!-- ITEM MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOutsideClick(event, 'modalOverlay')">
   <div class="modal">
     <div class="modal-header">
       <h2 id="modalTitle">Add Item</h2>
@@ -331,9 +368,34 @@
   </div>
 </div>
 
+<!-- EXPENSES MODAL -->
+<div class="modal-overlay" id="expenseOverlay" onclick="closeOnOutsideClick(event, 'expenseOverlay')">
+  <div class="modal" style="width: min(500px, 100%);">
+    <div class="modal-header">
+      <h2>💸 Overhead Expenses</h2>
+      <button class="close-btn" onclick="closeExpenseModal()">&times;</button>
+    </div>
+    <form onsubmit="handleAddExpense(event)" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
+      <div class="form-group" style="flex-grow: 1;">
+        <label>Expense (Boxes, Tape, Gas)</label>
+        <input type="text" id="expDesc" required placeholder="Shipping Boxes">
+      </div>
+      <div class="form-group" style="width: 100px;">
+        <label>Cost ($)</label>
+        <input type="number" id="expAmount" min="0.01" step="0.01" required placeholder="0.00">
+      </div>
+      <button type="submit" class="primary" style="padding: 10px 15px;">Add</button>
+    </form>
+    
+    <div class="expense-list" id="expenseListBody">
+      <!-- Dynamic Expense Rows -->
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -349,12 +411,14 @@
   const db = getFirestore(app);
 
   let inventory = [];
-  const MASTER_PASSWORD = "thriftflip123"; 
+  let expenseData = [];
+  let selectedItems = new Set();
+  const MASTER_PASSWORD = "fliptrack"; 
 
+  // --- AUTH ---
   window.handlePasswordUnlock = function(e) {
     e.preventDefault();
-    const val = document.getElementById('masterPasswordInput').value;
-    if (val === MASTER_PASSWORD) {
+    if (document.getElementById('masterPasswordInput').value === MASTER_PASSWORD) {
       localStorage.setItem('fliptrack_unlocked', 'true');
       document.getElementById('passOverlay').classList.add('hidden');
       loadData();
@@ -368,7 +432,7 @@
     localStorage.removeItem('fliptrack_unlocked');
     document.getElementById('passOverlay').classList.remove('hidden');
     document.getElementById('masterPasswordInput').value = '';
-    inventory = [];
+    inventory = []; expenseData = [];
     renderTable();
   };
 
@@ -379,33 +443,201 @@
     }
   });
 
+  // --- DATA LOADING (Items + Expenses) ---
   async function loadData() {
     try {
-      const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
+      const [itemSnap, expSnap] = await Promise.all([
+        getDocs(collection(db, "fliptrack_items")),
+        getDocs(collection(db, "fliptrack_expenses"))
+      ]);
+      
       inventory = [];
-      querySnapshot.forEach((document) => {
-        inventory.push({ id: document.id, ...document.data() });
-      });
+      itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() }));
+      
+      expenseData = [];
+      expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() }));
+
       renderTable();
+      renderExpenses();
     } catch (error) {
       console.error("Error loading data: ", error);
     }
   }
 
+  // --- EXPENSE TRACKER (#10) ---
+  window.openExpenseModal = () => document.getElementById('expenseOverlay').classList.add('active');
+  window.closeExpenseModal = () => document.getElementById('expenseOverlay').classList.remove('active');
+
+  window.handleAddExpense = async function(e) {
+    e.preventDefault();
+    const desc = document.getElementById('expDesc').value.trim();
+    const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+    const id = crypto.randomUUID();
+    
+    try {
+      await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString() });
+      document.getElementById('expDesc').value = '';
+      document.getElementById('expAmount').value = '';
+      await loadData();
+    } catch (error) { console.error(error); alert("Failed to add expense."); }
+  };
+
+  window.deleteExpense = async function(id) {
+    if(confirm("Delete this expense?")) {
+      await deleteDoc(doc(db, "fliptrack_expenses", id));
+      await loadData();
+    }
+  };
+
+  function renderExpenses() {
+    const list = document.getElementById('expenseListBody');
+    list.innerHTML = '';
+    let totalExp = 0;
+    
+    expenseData.forEach(exp => {
+      totalExp += exp.amount;
+      const dateStr = new Date(exp.date).toLocaleDateString();
+      list.innerHTML += `
+        <div class="expense-item">
+          <div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--muted); font-size:11px; margin-left:8px;">${dateStr}</span></div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="color:var(--red); font-weight:bold;">-$${exp.amount.toFixed(2)}</span>
+            <button class="danger" onclick="deleteExpense('${exp.id}')">X</button>
+          </div>
+        </div>
+      `;
+    });
+    
+    if(expenseData.length === 0) list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">No expenses logged yet.</div>`;
+    
+    document.getElementById('stat-expenses').innerText = `-$${totalExp.toFixed(2)}`;
+    return totalExp;
+  }
+
+  // --- BULK CSV IMPORT (#9) ---
+  window.handleCSVImport = async function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      const text = evt.target.result;
+      const lines = text.split('\n').filter(l => l.trim() !== '');
+      if(lines.length < 2) return alert("CSV appears empty.");
+      
+      if(!confirm(`Found ${lines.length - 1} items to import. Proceed?`)) {
+        document.getElementById('csvUpload').value = ''; return;
+      }
+      
+      const batch = writeBatch(db);
+      for(let i = 1; i < lines.length; i++) {
+        // Regex handles commas inside quotes
+        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+        if(row.length < 3) continue;
+        
+        const id = crypto.randomUUID();
+        const itemData = {
+          name: row[0] || 'Unknown', brand: row[1] || '', model: row[2] || '',
+          tier: row[3] || 'Quick Flip', date: row[4] || new Date().toISOString().slice(0, 10),
+          cost: parseFloat(row[5]) || 0, expectedSale: parseFloat(row[6]) || 0,
+          actualSale: parseFloat(row[7]) || null, fees: parseFloat(row[8]) || 0,
+          shipping: parseFloat(row[9]) || 0, status: row[11] || 'Purchased', notes: row[12] || ''
+        };
+        batch.set(doc(db, "fliptrack_items", id), itemData);
+      }
+      
+      try {
+        await batch.commit();
+        alert("Bulk import successful!");
+        document.getElementById('csvUpload').value = '';
+        loadData();
+      } catch (err) {
+        console.error(err); alert("Bulk import failed.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // --- BATCH ACTIONS (#14) ---
+  window.toggleSelectAll = function(checkbox) {
+    const rowBoxes = document.querySelectorAll('.row-checkbox');
+    selectedItems.clear();
+    rowBoxes.forEach(box => {
+      box.checked = checkbox.checked;
+      if (checkbox.checked) selectedItems.add(box.value);
+    });
+    updateBulkToolbar();
+  };
+
+  window.toggleRowSelection = function(id, checkbox) {
+    if (checkbox.checked) selectedItems.add(id);
+    else selectedItems.delete(id);
+    updateBulkToolbar();
+  };
+
+  function updateBulkToolbar() {
+    const toolbar = document.getElementById('bulkActions');
+    if(selectedItems.size > 0) {
+      toolbar.style.opacity = '1';
+      toolbar.style.pointerEvents = 'auto';
+      toolbar.style.borderColor = 'var(--accent)';
+    } else {
+      toolbar.style.opacity = '0.5';
+      toolbar.style.pointerEvents = 'none';
+      toolbar.style.borderColor = 'var(--border)';
+      document.getElementById('selectAllCheckbox').checked = false;
+    }
+    
+    // Highlight selected rows
+    document.querySelectorAll('#tableBody tr').forEach(tr => {
+      const box = tr.querySelector('.row-checkbox');
+      if(box && box.checked) tr.classList.add('selected');
+      else tr.classList.remove('selected');
+    });
+  }
+
+  window.applyBulkStatus = async function() {
+    if(selectedItems.size === 0) return;
+    const newStatus = document.getElementById('bulkStatusSelect').value;
+    if(!confirm(`Update ${selectedItems.size} items to '${newStatus}'?`)) return;
+
+    const batch = writeBatch(db);
+    selectedItems.forEach(id => {
+      batch.update(doc(db, "fliptrack_items", id), { status: newStatus });
+    });
+
+    await batch.commit();
+    selectedItems.clear();
+    updateBulkToolbar();
+    loadData();
+  };
+
+  window.deleteSelected = async function() {
+    if(selectedItems.size === 0) return;
+    if(!confirm(`Permanently DELETE ${selectedItems.size} items?`)) return;
+
+    const batch = writeBatch(db);
+    selectedItems.forEach(id => {
+      batch.delete(doc(db, "fliptrack_items", id));
+    });
+
+    await batch.commit();
+    selectedItems.clear();
+    updateBulkToolbar();
+    loadData();
+  };
+
+  // --- STANDARD ITEM CRUD ---
   window.handleFormSubmit = async function(e) {
     e.preventDefault();
-    
     const id = document.getElementById('itemId').value || crypto.randomUUID();
     const name = document.getElementById('itemName').value.trim();
-    if (!name) { alert('Give the item a name.'); return; }
+    if (!name) return alert('Give the item a name.');
 
     const itemData = {
-      name: name,
-      brand: document.getElementById('itemBrand').value.trim(),
-      model: document.getElementById('itemModel').value.trim(),
-      date: document.getElementById('itemDate').value,
-      status: document.getElementById('itemStatus').value,
-      tier: document.getElementById('itemTier').value,
+      name: name, brand: document.getElementById('itemBrand').value.trim(),
+      model: document.getElementById('itemModel').value.trim(), date: document.getElementById('itemDate').value,
+      status: document.getElementById('itemStatus').value, tier: document.getElementById('itemTier').value,
       cost: parseFloat(document.getElementById('itemCost').value) || 0,
       expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0,
       actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value),
@@ -414,228 +646,112 @@
       notes: document.getElementById('itemNotes').value.trim()
     };
 
-    try {
-      await setDoc(doc(db, "fliptrack_items", id), itemData);
-      closeModal();
-      loadData();
-    } catch (error) {
-      console.error("Error saving document: ", error);
-      alert("Failed to save item to cloud.");
-    }
+    await setDoc(doc(db, "fliptrack_items", id), itemData);
+    closeModal(); loadData();
   };
 
   window.deleteItem = async function(id) {
-    if (confirm('Delete this item from cloud storage?')) {
-      try {
-        await deleteDoc(doc(db, "fliptrack_items", id));
-        loadData();
-      } catch (error) {
-        console.error("Error deleting document: ", error);
-      }
+    if (confirm('Delete this item?')) {
+      await deleteDoc(doc(db, "fliptrack_items", id)); loadData();
     }
   };
 
   window.clearAll = async function() {
-    if (confirm('Delete ALL tracked items from the cloud database? This cannot be undone.')) {
-      try {
-        const querySnapshot = await getDocs(collection(db, "fliptrack_items"));
-        const deletePromises = querySnapshot.docs.map((d) => deleteDoc(doc(db, "fliptrack_items", d.id)));
-        await Promise.all(deletePromises);
-        loadData();
-      } catch (error) {
-        console.error("Error clearing data: ", error);
-      }
+    if (confirm('Delete ALL tracked items? This cannot be undone.')) {
+      const deletePromises = inventory.map(i => deleteDoc(doc(db, "fliptrack_items", i.id)));
+      await Promise.all(deletePromises); loadData();
     }
   };
 
-  function calculateDaysInStock(dateStr) {
-    if (!dateStr) return '—';
-    const purchaseDate = new Date(dateStr);
-    const today = new Date();
-    const diffTime = today - purchaseDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays < 0 ? '0d' : `${diffDays}d`;
-  }
-
-  function calculateProfit(item) {
-    const cost = parseFloat(item.cost) || 0;
-    const fees = parseFloat(item.fees) || 0;
-    const shipping = parseFloat(item.shipping) || 0;
-    
-    if (item.status === 'Sold') {
-      const actual = parseFloat(item.actualSale) || 0;
-      return actual - cost - fees - shipping;
-    } else {
-      const expected = parseFloat(item.expectedSale) || 0;
-      return expected - cost - fees - shipping;
-    }
-  }
-
-  function formatMoney(num) {
-    if (num === null || num === undefined || isNaN(num) || num === '') return '—';
-    return '$' + parseFloat(num).toFixed(2);
-  }
-
-  const escapeHTML = (str) => {
-    if (!str) return '';
-    return String(str).replace(/[&<>'"]/g, tag => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[tag]));
+  window.copyListingTemplate = function(id) {
+    const item = inventory.find(i => i.id === id);
+    if (!item) return;
+    const title = `${item.brand ? item.brand + ' ' : ''}${item.name}${item.model ? ' ' + item.model : ''}`.trim();
+    const price = item.expectedSale ? `$${parseFloat(item.expectedSale).toFixed(2)}` : 'N/A';
+    const template = `🔥 ${title} 🔥\n\nBrand: ${item.brand || 'N/A'}\nModel: ${item.model || 'N/A'}\nCondition / Notes: ${item.notes || 'Tested and working. Clean condition.'}\nPrice: ${price}\n\nMessage if interested or have any questions!`;
+    navigator.clipboard.writeText(template).then(() => alert(`Copied template for "${item.name}"!`));
   };
 
+  // --- HELPERS ---
+  const calculateDaysInStock = d => { if(!d) return '—'; const diff = Math.floor((new Date() - new Date(d)) / 86400000); return diff < 0 ? '0d' : `${diff}d`; };
+  const calculateProfit = i => (i.status === 'Sold' ? (parseFloat(i.actualSale)||0) : (parseFloat(i.expectedSale)||0)) - (parseFloat(i.cost)||0) - (parseFloat(i.fees)||0) - (parseFloat(i.shipping)||0);
+  const formatMoney = n => (n === null || n === undefined || isNaN(n) || n === '') ? '—' : '$' + parseFloat(n).toFixed(2);
+  const escapeHTML = s => String(s||'').replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+
+  // --- RENDERING ---
   function renderTable() {
     const tbody = document.getElementById('tableBody');
     const search = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
     
     tbody.innerHTML = '';
-
-    let invested = 0;
-    let expectedRevenue = 0;
-    let realizedProfit = 0;
-    let itemsSold = 0;
-    let filteredCount = 0;
+    let invested = 0, expectedRevenue = 0, grossProfit = 0, itemsSold = 0;
 
     inventory.forEach(item => {
-      const cost = parseFloat(item.cost) || 0;
-      invested += cost;
-      
-      if (item.status !== 'Sold' && item.status !== 'Dead') {
-        expectedRevenue += (parseFloat(item.expectedSale) || 0);
-      }
+      invested += (parseFloat(item.cost) || 0);
+      if (item.status !== 'Sold' && item.status !== 'Dead') expectedRevenue += (parseFloat(item.expectedSale) || 0);
+      if (item.status === 'Sold') { itemsSold++; grossProfit += calculateProfit(item); }
 
-      if (item.status === 'Sold') {
-        itemsSold++;
-        realizedProfit += calculateProfit(item);
-      }
-
-      const searchString = `${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase();
-      const matchesSearch = searchString.includes(search);
-      const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
-
-      if (matchesSearch && matchesStatus) {
-        filteredCount++;
+      if (`${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase().includes(search) && (statusFilter === 'All' || item.status === statusFilter)) {
         const profit = calculateProfit(item);
-        const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
-        const profitPrefix = profit >= 0 ? '+' : '';
-        const actualDisplay = (item.actualSale === null || item.actualSale === '') ? '—' : formatMoney(item.actualSale);
+        const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+        let tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick');
         
-        let tierClass = 'tier-quick';
-        if (item.tier === 'Long Tail') tierClass = 'tier-long';
-        if (item.tier === 'Project') tierClass = 'tier-project';
+        const isChecked = selectedItems.has(item.id) ? 'checked' : '';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <span class="item-main">${escapeHTML(item.name)}</span>
-            <span class="item-sub">${escapeHTML(item.brand)} ${item.brand && item.model ? '•' : ''} ${escapeHTML(item.model)}</span>
-            <span class="tier-tag ${tierClass}">${escapeHTML(item.tier || 'Quick Flip')}</span>
-          </td>
-          <td style="font-weight: 600; color: var(--muted);">${calculateDaysInStock(item.date)}</td>
-          <td>${formatMoney(item.cost)}</td>
-          <td>${formatMoney(item.expectedSale)}</td>
-          <td>${actualDisplay}</td>
-          <td>${formatMoney(item.fees)}</td>
-          <td>${formatMoney(item.shipping)}</td>
-          <td class="profit-col ${profitClass}">${profitPrefix}${formatMoney(profit)}</td>
-          <td><span class="pill status-${item.status.toLowerCase()}">${escapeHTML(item.status)}</span></td>
-          <td class="action-btns">
-            <button onclick="editItem('${item.id}')">Edit</button>
-            <button class="danger" onclick="deleteItem('${item.id}')">Del</button>
-          </td>
+        tbody.innerHTML += `
+          <tr class="${isChecked ? 'selected' : ''}">
+            <td><input type="checkbox" class="row-checkbox" value="${item.id}" onchange="toggleRowSelection('${item.id}', this)" ${isChecked}></td>
+            <td><span class="item-main">${escapeHTML(item.name)}</span><span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span><span class="tier-tag ${tClass}">${escapeHTML(item.tier || 'Quick Flip')}</span></td>
+            <td style="font-weight:600; color:var(--muted);">${calculateDaysInStock(item.date)}</td>
+            <td>${formatMoney(item.cost)}</td>
+            <td>${formatMoney(item.expectedSale)}</td>
+            <td>${item.actualSale ? formatMoney(item.actualSale) : '—'}</td>
+            <td>${formatMoney(item.fees)}</td>
+            <td>${formatMoney(item.shipping)}</td>
+            <td class="profit-col ${pClass}">${profit >= 0 ? '+' : ''}${formatMoney(profit)}</td>
+            <td><span class="pill status-${item.status.toLowerCase()}">${escapeHTML(item.status)}</span></td>
+            <td class="action-btns"><button onclick="copyListingTemplate('${item.id}')" title="Copy Listing Template">📋</button><button onclick="editItem('${item.id}')">Edit</button></td>
+          </tr>
         `;
-        tbody.appendChild(tr);
       }
     });
 
-    if (filteredCount === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" class="empty">No items found in cloud database. Hit <b>+ Add Item</b>.</td></tr>`;
-    }
+    if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="11" class="empty">No items found.</td></tr>`;
+
+    // Calculate True Net Profit
+    const totalExp = expenseData.reduce((acc, curr) => acc + curr.amount, 0);
+    const trueNet = grossProfit - totalExp;
 
     document.getElementById('stat-invested').innerText = formatMoney(invested);
     document.getElementById('stat-expected').innerText = formatMoney(expectedRevenue);
+    document.getElementById('stat-gross').innerText = (grossProfit >= 0 ? '+' : '') + formatMoney(grossProfit);
+    document.getElementById('stat-gross').className = `value ${grossProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
     
-    const realizedEl = document.getElementById('stat-realized');
-    realizedEl.innerText = (realizedProfit >= 0 ? '+' : '') + formatMoney(realizedProfit);
-    realizedEl.className = `value ${realizedProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+    document.getElementById('stat-net').innerText = (trueNet >= 0 ? '+' : '') + formatMoney(trueNet);
+    document.getElementById('stat-net').className = `value ${trueNet >= 0 ? 'profit-positive' : 'profit-negative'}`;
     
-    document.getElementById('stat-sold-count').innerText = itemsSold;
+    updateBulkToolbar();
   }
 
-  window.openModal = function() {
-    document.getElementById('itemForm').reset();
-    document.getElementById('itemId').value = '';
-    document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('itemTier').value = 'Quick Flip';
-    document.getElementById('modalTitle').innerText = 'Add Item';
-    document.getElementById('modalOverlay').classList.add('active');
-  };
-
+  window.openModal = function() { document.getElementById('itemForm').reset(); document.getElementById('itemId').value = ''; document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10); document.getElementById('itemTier').value = 'Quick Flip'; document.getElementById('modalTitle').innerText = 'Add Item'; document.getElementById('modalOverlay').classList.add('active'); };
   window.editItem = function(id) {
-    const item = inventory.find(i => i.id === id);
-    if (!item) return;
-
-    document.getElementById('itemId').value = item.id;
-    document.getElementById('itemName').value = item.name || '';
-    document.getElementById('itemBrand').value = item.brand || '';
-    document.getElementById('itemModel').value = item.model || '';
-    document.getElementById('itemDate').value = item.date || '';
-    document.getElementById('itemStatus').value = item.status || 'Purchased';
-    document.getElementById('itemTier').value = item.tier || 'Quick Flip';
-    document.getElementById('itemCost').value = item.cost ?? '';
-    document.getElementById('itemExpected').value = item.expectedSale ?? '';
-    document.getElementById('itemActual').value = item.actualSale ?? '';
-    document.getElementById('itemFees').value = item.fees ?? '';
-    document.getElementById('itemShipping').value = item.shipping ?? '';
-    document.getElementById('itemNotes').value = item.notes || '';
-    
-    document.getElementById('modalTitle').innerText = 'Edit Item';
-    document.getElementById('modalOverlay').classList.add('active');
+    const item = inventory.find(i => i.id === id); if (!item) return;
+    ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => {
+      document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? '';
+    });
+    document.getElementById('modalTitle').innerText = 'Edit Item'; document.getElementById('modalOverlay').classList.add('active');
   };
-
-  window.closeModal = function() {
-    document.getElementById('modalOverlay').classList.remove('active');
-  };
-
-  window.closeOnOutsideClick = function(e) {
-    if (e.target.id === 'modalOverlay') closeModal();
-  };
-
+  window.closeModal = () => document.getElementById('modalOverlay').classList.remove('active');
+  window.closeOnOutsideClick = (e, id) => { if (e.target.id === id) document.getElementById(id).classList.remove('active'); };
+  
   window.exportCSV = function() {
     if (inventory.length === 0) return alert('No inventory to export.');
-
-    const headers = ['Item', 'Brand', 'Model', 'Tier', 'Purchase Date', 'Cost', 'Expected Sale', 'Actual Sale', 'Fees', 'Shipping', 'Profit', 'Status', 'Notes'];
-    
-    const rows = inventory.map(item => {
-      return [
-        `"${escapeHTML(item.name)}"`,
-        `"${escapeHTML(item.brand)}"`,
-        `"${escapeHTML(item.model)}"`,
-        `"${escapeHTML(item.tier)}"`,
-        `"${item.date}"`,
-        item.cost || 0,
-        item.expectedSale || 0,
-        item.actualSale || '',
-        item.fees || 0,
-        item.shipping || 0,
-        calculateProfit(item),
-        item.status,
-        `"${escapeHTML(item.notes).replace(/"/g, '""')}"`
-      ].join(',');
-    });
-
-    const csvContent = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'fliptrack-inventory.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const rows = inventory.map(i => [`"${escapeHTML(i.name)}"`,`"${escapeHTML(i.brand)}"`,`"${escapeHTML(i.model)}"`,`"${escapeHTML(i.tier)}"`,`"${i.date}"`,i.cost||0,i.expectedSale||0,i.actualSale||'',i.fees||0,i.shipping||0,calculateProfit(i),i.status,`"${escapeHTML(i.notes).replace(/"/g, '""')}"`].join(','));
+    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([['Item,Brand,Model,Tier,Purchase Date,Cost,Expected Sale,Actual Sale,Fees,Shipping,Profit,Status,Notes', ...rows].join('\n')], { type: 'text/csv' }));
+    link.download = 'fliptrack-inventory.csv'; link.click();
   };
-
+  
   window.renderTable = renderTable;
 </script>
 </body>
