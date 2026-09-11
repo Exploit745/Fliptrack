@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FlipTrack | Inventory Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
     --bg: #090a0c; 
@@ -27,7 +28,7 @@
     font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
   }
   button, input, select, textarea { font: inherit; }
-  .wrap { max-width: 1350px; margin: auto; padding: 24px; }
+  .wrap { max-width: 1400px; margin: auto; padding: 24px; }
   
   /* HEADER */
   header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -55,9 +56,19 @@
   .stat .value { font-size: 22px; font-weight: 850; margin-top: 5px; }
   .profit-positive { color: var(--green); }
   .profit-negative { color: var(--red); }
-  
-  /* BANNERS */
-  .notice { border-left: 3px solid var(--yellow); background: rgba(253,255,85,.045); padding: 11px 13px; border-radius: 8px; color: #d8dae0; margin-bottom: 18px; font-size: 13px; }
+
+  /* WIDGETS (CHART & GOAL) */
+  .widgets { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 25px; }
+  .chart-container { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 15px; height: 250px; position: relative; }
+  .goal-container { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 25px 20px; display: flex; flex-direction: column; justify-content: center; }
+  .goal-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
+  .goal-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin: 0; }
+  .goal-amounts { text-align: right; }
+  .goal-current { font-size: 24px; font-weight: 850; color: var(--accent); }
+  .goal-target { font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+  .goal-target:hover { color: #fff; text-decoration-color: var(--accent); }
+  .progress-bg { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; height: 12px; width: 100%; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, #00eaff, #c4a7ff); height: 100%; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 999px; }
 
   /* TOOLBAR */
   .toolbar { display: flex; justify-content: space-between; gap: 9px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
@@ -81,8 +92,9 @@
   .item-main { font-weight: 750; color: #fff; display: block; }
   .item-sub { font-size: 11px; color: var(--muted); }
   .profit-col { font-weight: 800; }
+  .roi-tag { font-size: 10px; color: var(--muted); background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-top: 4px; display: inline-block; }
   
-  /* PILLS */
+  /* PILLS & TAGS */
   .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; border: 1px solid var(--border); text-transform: uppercase; }
   .status-purchased { color: var(--yellow); background: rgba(253, 255, 85, 0.1); border-color: rgba(253, 255, 85, 0.3); }
   .status-listed { color: var(--accent); background: rgba(0, 234, 255, 0.1); border-color: rgba(0, 234, 255, 0.3); }
@@ -98,12 +110,27 @@
   .action-btns button { padding: 5px 10px; font-size: 11px; margin-right: 4px; }
   .empty { text-align: center; color: var(--muted); padding: 40px; }
 
-  /* GUIDES & BOLOS */
+  /* GUIDES */
   .guides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 40px; }
   .guide-card h3 { font-size: 14px; margin-bottom: 10px; color: #fff; }
   .guide-card ul { margin: 0; padding-left: 0; list-style: none; color: #c6cbd2; font-size: 13px; }
   .guide-card ul li { margin-bottom: 6px; display: flex; gap: 8px; }
   .guide-card ul li::before { content: '•'; color: var(--accent); }
+
+  /* BOLO MODAL SPECIFICS */
+  .bolo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding-right: 10px;}
+  .bolo-cat { background: #1a1e26; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+  .bolo-cat h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 5px;}
+  .bolo-cat ul { margin: 0; padding-left: 15px; color: #d8dae0; font-size: 12px; }
+  .bolo-cat ul li { margin-bottom: 4px; }
+  .bolo-cat ul li.custom-bolo { color: var(--yellow); font-weight: bold; }
+  
+  /* AUDIT & TAX MODAL SPECIFICS */
+  .audit-list, .tax-list { margin-top: 15px; max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .audit-item { background: #1a1e26; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; color: #d8dae0; display: flex; justify-content: space-between; }
+  .audit-date { color: var(--muted); font-size: 10px; }
+  .tax-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .tax-row.total { font-weight: bold; color: var(--green); border-bottom: none; font-size: 16px; margin-top: 10px; }
 
   /* PASSWORD GATE OVERLAY */
   #passOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
@@ -117,9 +144,8 @@
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; }
   .modal-overlay.active { display: flex; }
   .modal { width: min(760px, 100%); max-height: 92vh; overflow-y: auto; background: #101216; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
-  
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .modal-header h2 { margin: 0; }
+  .modal-header h2 { margin: 0; display: flex; align-items: center; gap: 10px; }
   .close-btn { background: transparent; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 0; line-height: 1; }
   .close-btn:hover { color: #fff; border-color: transparent; }
 
@@ -130,16 +156,11 @@
   
   .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 
-  /* EXPENSE MODAL SPECIFICS */
-  .expense-list { margin-top: 20px; border: 1px solid var(--border); border-radius: 9px; max-height: 300px; overflow-y: auto; }
-  .expense-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; }
-  .expense-item:last-child { border-bottom: none; }
-  .expense-item button { padding: 4px 8px; font-size: 10px; }
-
+  @media(max-width: 900px){ .widgets { grid-template-columns: 1fr; } }
   @media(max-width: 768px){ 
     .form-grid { grid-template-columns: 1fr; }
-    .header-actions { width: 100%; } 
-    .header-actions button, .header-actions label { flex-grow: 1; } 
+    .header-actions { width: 100%; justify-content: center; } 
+    .header-actions button, .header-actions label { flex-grow: 1; text-align: center; } 
     .toolbar { flex-direction: column; align-items: stretch; }
   }
 </style>
@@ -172,12 +193,12 @@
       </div>
     </div>
     <div class="actions header-actions">
+      <button onclick="openBoloModal()" style="color: var(--yellow); border-color: rgba(253,255,85,0.3);">👀 BOLO List</button>
+      <button onclick="openTaxModal()" style="color: var(--green); border-color: rgba(88,230,139,0.3);">📄 Tax Prep</button>
+      <button onclick="openAuditModal()" style="color: var(--muted);">📜 Audit Log</button>
       <button class="special" onclick="openExpenseModal()">💸 Expenses</button>
-      
       <label for="csvUpload" class="btn-label">Import CSV</label>
       <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
-      
-      <button onclick="exportCSV()">Export CSV</button>
       <button class="primary" onclick="openModal()">+ Add Item</button>
       <button onclick="lockApp()">Lock App</button>
     </div>
@@ -203,6 +224,26 @@
     <div class="card stat" style="border-color: var(--green); background: rgba(88,230,139,0.05);">
       <div class="label" style="color: var(--green);">True Net Profit</div>
       <div class="value profit-positive" id="stat-net">$0.00</div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS WIDGETS -->
+  <section class="widgets">
+    <div class="chart-container">
+      <canvas id="profitChart"></canvas>
+    </div>
+    <div class="goal-container">
+      <div class="goal-header">
+        <h3 class="goal-title">Monthly Net Goal</h3>
+        <div class="goal-amounts">
+          <div class="goal-current" id="goalCurrentTxt">$0</div>
+          <div class="goal-target" onclick="updateGoal()" title="Click to edit goal">Target: $<span id="goalTargetTxt">1000</span></div>
+        </div>
+      </div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="goalProgressBar"></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 11px; color: var(--muted); text-align: right;" id="goalPercentTxt">0% completed</div>
     </div>
   </section>
 
@@ -243,9 +284,8 @@
           <th>Cost</th>
           <th>Expected Sale</th>
           <th>Actual Sale</th>
-          <th>Fees</th>
-          <th>Shipping</th>
-          <th>Profit</th>
+          <th>Fees / Ship</th>
+          <th>Profit & ROI</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -256,36 +296,24 @@
     </table>
   </div>
 
-  <!-- RESTORED RULES, GUIDES, & BOLO -->
-  <div class="guides-grid">
+  <!-- BUY / SELL CHECK GUIDES -->
+  <div class="guides-grid" style="grid-template-columns: 1fr 1fr;">
     <div class="card guide-card">
       <h3>🟢 BUY CHECK</h3>
       <ul>
-        <li>Exact model identified</li>
-        <li>Multiple sold comps</li>
+        <li>Exact model identified via comps</li>
         <li>Condition checked/tested</li>
-        <li>Shipping is manageable</li>
-        <li>Profit is worth the time</li>
+        <li>Shipping logistics make sense</li>
+        <li>Profit margin & ROI is worth the time</li>
       </ul>
     </div>
     <div class="card guide-card">
       <h3>📦 SELL CHECK</h3>
       <ul>
-        <li>Clear photos of every side</li>
-        <li>Model/serial shown</li>
-        <li>Flaws disclosed</li>
-        <li>Accurate weight & dimensions</li>
-        <li>Price based on sold comps</li>
-      </ul>
-    </div>
-    <div class="card guide-card">
-      <h3>👀 BOLO BRANDS</h3>
-      <ul>
-        <li><b>Clothes:</b> Vintage Levi's, Arc'teryx, Carhartt WIP</li>
-        <li><b>Tech:</b> Sony Walkmans, TI-84s, vintage Apple</li>
-        <li><b>Shoes:</b> Hokas, Red Wings, retro Jordans</li>
-        <li><b>Media:</b> Sealed VHS, niche DVD box sets</li>
-        <li><b>Home:</b> Pyrex, Mid-Century Modern decor</li>
+        <li>Clear photos of every angle & tags</li>
+        <li>All flaws clearly disclosed in description</li>
+        <li>Accurate pre-packaged weight & dimensions</li>
+        <li>Priced competitively based on recent sold data</li>
       </ul>
     </div>
   </div>
@@ -303,15 +331,15 @@
       <div class="form-grid">
         <div class="form-group full">
           <label>Item Name *</label>
-          <input type="text" id="itemName" required placeholder="Eumig Mark 610D">
+          <input type="text" id="itemName" required placeholder="e.g. Sony Walkman">
         </div>
         <div class="form-group">
           <label>Brand</label>
-          <input type="text" id="itemBrand" placeholder="Eumig">
+          <input type="text" id="itemBrand" placeholder="Sony">
         </div>
         <div class="form-group">
           <label>Model</label>
-          <input type="text" id="itemModel" placeholder="Mark 610D">
+          <input type="text" id="itemModel" placeholder="WM-F41">
         </div>
         <div class="form-group">
           <label>Purchase Date</label>
@@ -386,16 +414,79 @@
       </div>
       <button type="submit" class="primary" style="padding: 10px 15px;">Add</button>
     </form>
+    <div class="expense-list" id="expenseListBody"></div>
+  </div>
+</div>
+
+<!-- BOLO MODAL (#3 - Expanded & Dynamic) -->
+<div class="modal-overlay" id="boloOverlay" onclick="closeOnOutsideClick(event, 'boloOverlay')">
+  <div class="modal" style="width: min(800px, 100%);">
+    <div class="modal-header">
+      <h2>👀 Master BOLO List</h2>
+      <button class="close-btn" onclick="closeBoloModal()">&times;</button>
+    </div>
     
-    <div class="expense-list" id="expenseListBody">
-      <!-- Dynamic Expense Rows -->
+    <form onsubmit="handleAddBolo(event)" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end; background: var(--panel2); padding: 15px; border-radius: 9px; border: 1px solid var(--border);">
+      <div class="form-group" style="flex-grow: 1;">
+        <label>Add Custom Brand / Item</label>
+        <input type="text" id="newBoloName" required placeholder="e.g. vintage Coogi sweaters">
+      </div>
+      <div class="form-group" style="width: 180px;">
+        <label>Category</label>
+        <select id="newBoloCat">
+          <option value="Clothes">Clothes</option>
+          <option value="Tech">Tech / Electronics</option>
+          <option value="Shoes">Shoes</option>
+          <option value="Media">Media / Games</option>
+          <option value="Home">Home / Decor</option>
+          <option value="Misc">Misc / Hardgoods</option>
+        </select>
+      </div>
+      <button type="submit" class="primary" style="padding: 10px 15px;">Save to DB</button>
+    </form>
+
+    <div class="bolo-grid" id="boloGridContainer">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- TAX PREP MODAL (#13) -->
+<div class="modal-overlay" id="taxOverlay" onclick="closeOnOutsideClick(event, 'taxOverlay')">
+  <div class="modal" style="width: min(500px, 100%);">
+    <div class="modal-header">
+      <h2>📄 1099 Tax Estimator</h2>
+      <button class="close-btn" onclick="closeTaxModal()">&times;</button>
+    </div>
+    <div style="color: var(--muted); font-size: 13px; margin-bottom: 20px;">Calculated from ALL items marked as 'Sold' and logged expenses. Consult a CPA for official filings.</div>
+    
+    <div class="tax-list" id="taxDataContainer">
+      <!-- Injected via JS -->
+    </div>
+    
+    <div class="modal-footer">
+      <button class="primary" onclick="exportCSV()">Export All Data (CSV)</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT LOG MODAL (#20) -->
+<div class="modal-overlay" id="auditOverlay" onclick="closeOnOutsideClick(event, 'auditOverlay')">
+  <div class="modal" style="width: min(600px, 100%);">
+    <div class="modal-header">
+      <h2>📜 Activity Audit Trail</h2>
+      <button class="close-btn" onclick="closeAuditModal()">&times;</button>
+    </div>
+    <p style="color:var(--muted); font-size:12px; margin-top:0;">Showing the last 50 actions on your database.</p>
+    <div class="audit-list" id="auditListContainer">
+      <div style="padding: 20px; text-align: center; color: var(--muted);">Loading audit logs...</div>
     </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs",
@@ -412,8 +503,20 @@
 
   let inventory = [];
   let expenseData = [];
+  let dbBolos = [];
   let selectedItems = new Set();
+  let profitChartInstance = null;
   const MASTER_PASSWORD = "thriftflip123"; 
+
+  // Hardcoded Base BOLOs so your list is never empty
+  const defaultBolos = {
+    'Clothes': ['Vintage Levi\'s (Silver/Orange Tab)', 'Arc\'teryx Jackets', 'Carhartt WIP', 'Vintage Coogi Sweaters', 'Pendleton Flannels', 'True Religion Jeans'],
+    'Tech': ['Sony Walkmans (Cassette)', 'TI-84 Plus Calculators', 'Vintage Apple (iPod Classic, Macs)', 'VCR / DVD Combos with Remotes', 'High-end Film Cameras'],
+    'Shoes': ['Hoka Running Shoes', 'Red Wing Boots', 'Retro Air Jordans', 'Birkenstock Bostons', 'Salomon Trail Shoes', 'On Cloud'],
+    'Media': ['Sealed Vintage VHS Tapes', 'Niche / OOP DVD Box Sets', 'GameCube & Wii U Games', 'Out of Print Manga Sets'],
+    'Home': ['Vintage Pyrex / Corningware', 'Mid-Century Modern Decor', 'Le Creuset Cookware', 'Starbucks City Mugs (YAH)', 'Dyson Vacuums / Parts'],
+    'Misc': ['Lego Sets (Complete)', 'Vintage Snap-On Tools', 'High-end Golf Clubs', 'American Girl Dolls (Pre-Mattel)']
+  };
 
   // --- AUTH ---
   window.handlePasswordUnlock = function(e) {
@@ -441,9 +544,22 @@
       document.getElementById('passOverlay').classList.add('hidden');
       loadData();
     }
+    const savedGoal = localStorage.getItem('fliptrack_goal') || 1000;
+    document.getElementById('goalTargetTxt').innerText = savedGoal;
   });
 
-  // --- DATA LOADING (Items + Expenses) ---
+  // --- GOAL TRACKER ---
+  window.updateGoal = function() {
+    const currentGoal = localStorage.getItem('fliptrack_goal') || 1000;
+    const newGoal = prompt("Set your new monthly net profit goal ($):", currentGoal);
+    if(newGoal && !isNaN(newGoal)) {
+      localStorage.setItem('fliptrack_goal', newGoal);
+      document.getElementById('goalTargetTxt').innerText = newGoal;
+      renderTable(); 
+    }
+  };
+
+  // --- DB DATA LOADING ---
   async function loadData() {
     try {
       const [itemSnap, expSnap] = await Promise.all([
@@ -451,20 +567,149 @@
         getDocs(collection(db, "fliptrack_expenses"))
       ]);
       
-      inventory = [];
-      itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() }));
-      
-      expenseData = [];
-      expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() }));
+      inventory = []; itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() }));
+      expenseData = []; expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() }));
 
       renderTable();
       renderExpenses();
-    } catch (error) {
-      console.error("Error loading data: ", error);
-    }
+    } catch (error) { console.error("Error loading data: ", error); }
   }
 
-  // --- EXPENSE TRACKER (#10) ---
+  // --- AUDIT TRAIL LOGGING (#20) ---
+  async function logAudit(actionString) {
+    try {
+      await addDoc(collection(db, "fliptrack_audit"), {
+        action: actionString,
+        date: new Date().toISOString()
+      });
+    } catch (e) { console.error("Audit log failed: ", e); }
+  }
+
+  window.openAuditModal = async function() {
+    document.getElementById('auditOverlay').classList.add('active');
+    const container = document.getElementById('auditListContainer');
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--muted);">Loading audit logs...</div>`;
+    
+    try {
+      const snap = await getDocs(collection(db, "fliptrack_audit"));
+      let logs = [];
+      snap.forEach(d => logs.push(d.data()));
+      
+      // Sort desc client-side to avoid Firebase composite index requirements
+      logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      logs = logs.slice(0, 50); // Keep it to latest 50
+      
+      container.innerHTML = '';
+      if(logs.length === 0) container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">No activity logged yet.</div>`;
+      
+      logs.forEach(log => {
+        const d = new Date(log.date);
+        container.innerHTML += `
+          <div class="audit-item">
+            <span>${escapeHTML(log.action)}</span>
+            <span class="audit-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+        `;
+      });
+    } catch (e) { container.innerHTML = `<div style="color:var(--red);">Failed to load logs.</div>`; }
+  };
+  window.closeAuditModal = () => document.getElementById('auditOverlay').classList.remove('active');
+
+
+  // --- BOLO MODAL LOGIC (Dynamic & Merged) ---
+  window.openBoloModal = async function() {
+    document.getElementById('boloOverlay').classList.add('active');
+    try {
+      const snap = await getDocs(collection(db, "fliptrack_bolos"));
+      dbBolos = [];
+      snap.forEach(d => dbBolos.push(d.data()));
+      renderBolos();
+    } catch (e) { console.error(e); }
+  };
+  window.closeBoloModal = () => document.getElementById('boloOverlay').classList.remove('active');
+
+  window.handleAddBolo = async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('newBoloName').value.trim();
+    const cat = document.getElementById('newBoloCat').value;
+    if(!name) return;
+
+    try {
+      await addDoc(collection(db, "fliptrack_bolos"), { name, category: cat });
+      document.getElementById('newBoloName').value = '';
+      
+      // Refresh local modal data instantly
+      dbBolos.push({ name, category: cat });
+      renderBolos();
+      logAudit(`Added '${name}' to BOLO Watchlist`);
+    } catch (e) { alert("Failed to add BOLO."); }
+  };
+
+  function renderBolos() {
+    const container = document.getElementById('boloGridContainer');
+    container.innerHTML = '';
+    
+    // Merge DB bolos into default structure for rendering
+    let renderData = JSON.parse(JSON.stringify(defaultBolos));
+    dbBolos.forEach(b => {
+      if(!renderData[b.category]) renderData[b.category] = [];
+      renderData[b.category].push({ custom: true, name: b.name });
+    });
+
+    Object.keys(renderData).forEach(cat => {
+      const items = renderData[cat];
+      if(items.length === 0) return;
+      
+      let listHTML = items.map(item => {
+        if(typeof item === 'string') return `<li>${escapeHTML(item)}</li>`;
+        return `<li class="custom-bolo">⚡ ${escapeHTML(item.name)}</li>`;
+      }).join('');
+
+      container.innerHTML += `
+        <div class="bolo-cat">
+          <h4>${cat}</h4>
+          <ul>${listHTML}</ul>
+        </div>
+      `;
+    });
+  }
+
+  // --- TAX PREP MODAL LOGIC (#13) ---
+  window.openTaxModal = function() {
+    document.getElementById('taxOverlay').classList.add('active');
+    
+    // Calculate Tax Data (Sold Items Only)
+    let grossSales = 0, cogs = 0, sellingFees = 0, shippingCosts = 0;
+    
+    inventory.forEach(i => {
+      if(i.status === 'Sold') {
+        grossSales += (parseFloat(i.actualSale) || 0);
+        cogs += (parseFloat(i.cost) || 0);
+        sellingFees += (parseFloat(i.fees) || 0);
+        shippingCosts += (parseFloat(i.shipping) || 0);
+      }
+    });
+
+    let overhead = expenseData.reduce((acc, curr) => acc + curr.amount, 0);
+    let totalDeductions = cogs + sellingFees + shippingCosts + overhead;
+    let netTaxable = grossSales - totalDeductions;
+
+    const container = document.getElementById('taxDataContainer');
+    container.innerHTML = `
+      <div class="tax-row"><span>Gross Sales Revenue (1099-K)</span> <span>${formatMoney(grossSales)}</span></div>
+      <div class="tax-row" style="color:var(--muted);"><span>- Cost of Goods Sold (COGS)</span> <span>${formatMoney(cogs)}</span></div>
+      <div class="tax-row" style="color:var(--muted);"><span>- Platform Fees</span> <span>${formatMoney(sellingFees)}</span></div>
+      <div class="tax-row" style="color:var(--muted);"><span>- Shipping Labels</span> <span>${formatMoney(shippingCosts)}</span></div>
+      <div class="tax-row" style="color:var(--muted);"><span>- Overhead Expenses (Supplies)</span> <span>${formatMoney(overhead)}</span></div>
+      <div class="tax-row total" style="color: ${netTaxable >= 0 ? 'var(--green)' : 'var(--red)'};">
+        <span>Estimated Net Taxable Income</span> 
+        <span>${formatMoney(netTaxable)}</span>
+      </div>
+    `;
+  };
+  window.closeTaxModal = () => document.getElementById('taxOverlay').classList.remove('active');
+
+  // --- EXPENSE TRACKER ---
   window.openExpenseModal = () => document.getElementById('expenseOverlay').classList.add('active');
   window.closeExpenseModal = () => document.getElementById('expenseOverlay').classList.remove('active');
 
@@ -473,126 +718,63 @@
     const desc = document.getElementById('expDesc').value.trim();
     const amount = parseFloat(document.getElementById('expAmount').value) || 0;
     const id = crypto.randomUUID();
-    
     try {
       await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString() });
-      document.getElementById('expDesc').value = '';
-      document.getElementById('expAmount').value = '';
+      logAudit(`Logged expense: ${desc} ($${amount.toFixed(2)})`);
+      document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = '';
       await loadData();
-    } catch (error) { console.error(error); alert("Failed to add expense."); }
+    } catch (error) { alert("Failed to add expense."); }
   };
-
   window.deleteExpense = async function(id) {
-    if(confirm("Delete this expense?")) {
-      await deleteDoc(doc(db, "fliptrack_expenses", id));
-      await loadData();
-    }
+    if(confirm("Delete this expense?")) { await deleteDoc(doc(db, "fliptrack_expenses", id)); await loadData(); }
   };
-
   function renderExpenses() {
-    const list = document.getElementById('expenseListBody');
-    list.innerHTML = '';
-    let totalExp = 0;
-    
+    const list = document.getElementById('expenseListBody'); list.innerHTML = ''; let totalExp = 0;
     expenseData.forEach(exp => {
-      totalExp += exp.amount;
-      const dateStr = new Date(exp.date).toLocaleDateString();
-      list.innerHTML += `
-        <div class="expense-item">
-          <div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--muted); font-size:11px; margin-left:8px;">${dateStr}</span></div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="color:var(--red); font-weight:bold;">-$${exp.amount.toFixed(2)}</span>
-            <button class="danger" onclick="deleteExpense('${exp.id}')">X</button>
-          </div>
-        </div>
-      `;
+      totalExp += exp.amount; const dateStr = new Date(exp.date).toLocaleDateString();
+      list.innerHTML += `<div class="expense-item"><div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--muted); font-size:11px; margin-left:8px;">${dateStr}</span></div><div style="display:flex; align-items:center; gap:10px;"><span style="color:var(--red); font-weight:bold;">-$${exp.amount.toFixed(2)}</span><button class="danger" onclick="deleteExpense('${exp.id}')">X</button></div></div>`;
     });
-    
     if(expenseData.length === 0) list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">No expenses logged yet.</div>`;
-    
     document.getElementById('stat-expenses').innerText = `-$${totalExp.toFixed(2)}`;
     return totalExp;
   }
 
-  // --- BULK CSV IMPORT (#9) ---
-  window.handleCSVImport = async function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(evt) {
-      const text = evt.target.result;
-      const lines = text.split('\n').filter(l => l.trim() !== '');
-      if(lines.length < 2) return alert("CSV appears empty.");
-      
-      if(!confirm(`Found ${lines.length - 1} items to import. Proceed?`)) {
-        document.getElementById('csvUpload').value = ''; return;
+  // --- CHART RENDERING ---
+  function updateChart() {
+    const ctx = document.getElementById('profitChart').getContext('2d');
+    const monthlyData = {};
+    inventory.forEach(item => {
+      if(item.status === 'Sold' && item.date) {
+        const month = item.date.substring(0, 7);
+        monthlyData[month] = (monthlyData[month] || 0) + calculateProfit(item);
       }
-      
-      const batch = writeBatch(db);
-      for(let i = 1; i < lines.length; i++) {
-        // Regex handles commas inside quotes
-        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-        if(row.length < 3) continue;
-        
-        const id = crypto.randomUUID();
-        const itemData = {
-          name: row[0] || 'Unknown', brand: row[1] || '', model: row[2] || '',
-          tier: row[3] || 'Quick Flip', date: row[4] || new Date().toISOString().slice(0, 10),
-          cost: parseFloat(row[5]) || 0, expectedSale: parseFloat(row[6]) || 0,
-          actualSale: parseFloat(row[7]) || null, fees: parseFloat(row[8]) || 0,
-          shipping: parseFloat(row[9]) || 0, status: row[11] || 'Purchased', notes: row[12] || ''
-        };
-        batch.set(doc(db, "fliptrack_items", id), itemData);
-      }
-      
-      try {
-        await batch.commit();
-        alert("Bulk import successful!");
-        document.getElementById('csvUpload').value = '';
-        loadData();
-      } catch (err) {
-        console.error(err); alert("Bulk import failed.");
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // --- BATCH ACTIONS (#14) ---
-  window.toggleSelectAll = function(checkbox) {
-    const rowBoxes = document.querySelectorAll('.row-checkbox');
-    selectedItems.clear();
-    rowBoxes.forEach(box => {
-      box.checked = checkbox.checked;
-      if (checkbox.checked) selectedItems.add(box.value);
     });
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const labels = sortedMonths.map(m => new Date(m + "-02").toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+    const dataPoints = sortedMonths.map(m => monthlyData[m]);
+
+    if(profitChartInstance) profitChartInstance.destroy();
+    profitChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: labels.length ? labels : ['No Data'], datasets: [{ label: 'Realized Profit', data: dataPoints.length ? dataPoints : [0], backgroundColor: '#00eaff', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Profit by Month', color: '#8d949e', font: { size: 13, family: 'system-ui' } } }, scales: { y: { grid: { color: '#292d35' }, ticks: { color: '#8d949e', callback: (val) => '$' + val } }, x: { grid: { display: false }, ticks: { color: '#8d949e' } } } }
+    });
+  }
+
+  // --- BATCH ACTIONS ---
+  window.toggleSelectAll = function(checkbox) {
+    const rowBoxes = document.querySelectorAll('.row-checkbox'); selectedItems.clear();
+    rowBoxes.forEach(box => { box.checked = checkbox.checked; if (checkbox.checked) selectedItems.add(box.value); });
     updateBulkToolbar();
   };
-
-  window.toggleRowSelection = function(id, checkbox) {
-    if (checkbox.checked) selectedItems.add(id);
-    else selectedItems.delete(id);
-    updateBulkToolbar();
-  };
-
+  window.toggleRowSelection = function(id, checkbox) { if (checkbox.checked) selectedItems.add(id); else selectedItems.delete(id); updateBulkToolbar(); };
   function updateBulkToolbar() {
     const toolbar = document.getElementById('bulkActions');
-    if(selectedItems.size > 0) {
-      toolbar.style.opacity = '1';
-      toolbar.style.pointerEvents = 'auto';
-      toolbar.style.borderColor = 'var(--accent)';
-    } else {
-      toolbar.style.opacity = '0.5';
-      toolbar.style.pointerEvents = 'none';
-      toolbar.style.borderColor = 'var(--border)';
-      document.getElementById('selectAllCheckbox').checked = false;
-    }
-    
-    // Highlight selected rows
+    if(selectedItems.size > 0) { toolbar.style.opacity = '1'; toolbar.style.pointerEvents = 'auto'; toolbar.style.borderColor = 'var(--accent)'; } 
+    else { toolbar.style.opacity = '0.5'; toolbar.style.pointerEvents = 'none'; toolbar.style.borderColor = 'var(--border)'; document.getElementById('selectAllCheckbox').checked = false; }
     document.querySelectorAll('#tableBody tr').forEach(tr => {
       const box = tr.querySelector('.row-checkbox');
-      if(box && box.checked) tr.classList.add('selected');
-      else tr.classList.remove('selected');
+      if(box && box.checked) tr.classList.add('selected'); else tr.classList.remove('selected');
     });
   }
 
@@ -602,77 +784,55 @@
     if(!confirm(`Update ${selectedItems.size} items to '${newStatus}'?`)) return;
 
     const batch = writeBatch(db);
-    selectedItems.forEach(id => {
-      batch.update(doc(db, "fliptrack_items", id), { status: newStatus });
-    });
-
+    selectedItems.forEach(id => batch.update(doc(db, "fliptrack_items", id), { status: newStatus }));
     await batch.commit();
-    selectedItems.clear();
-    updateBulkToolbar();
-    loadData();
+    logAudit(`Bulk updated ${selectedItems.size} items to '${newStatus}'`);
+    selectedItems.clear(); updateBulkToolbar(); loadData();
   };
 
   window.deleteSelected = async function() {
     if(selectedItems.size === 0) return;
     if(!confirm(`Permanently DELETE ${selectedItems.size} items?`)) return;
-
     const batch = writeBatch(db);
-    selectedItems.forEach(id => {
-      batch.delete(doc(db, "fliptrack_items", id));
-    });
-
+    selectedItems.forEach(id => batch.delete(doc(db, "fliptrack_items", id)));
     await batch.commit();
-    selectedItems.clear();
-    updateBulkToolbar();
-    loadData();
+    logAudit(`Bulk deleted ${selectedItems.size} items from database.`);
+    selectedItems.clear(); updateBulkToolbar(); loadData();
   };
 
   // --- STANDARD ITEM CRUD ---
   window.handleFormSubmit = async function(e) {
     e.preventDefault();
     const id = document.getElementById('itemId').value || crypto.randomUUID();
+    const isNew = !document.getElementById('itemId').value;
     const name = document.getElementById('itemName').value.trim();
     if (!name) return alert('Give the item a name.');
 
     const itemData = {
-      name: name, brand: document.getElementById('itemBrand').value.trim(),
-      model: document.getElementById('itemModel').value.trim(), date: document.getElementById('itemDate').value,
-      status: document.getElementById('itemStatus').value, tier: document.getElementById('itemTier').value,
-      cost: parseFloat(document.getElementById('itemCost').value) || 0,
-      expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0,
+      name: name, brand: document.getElementById('itemBrand').value.trim(), model: document.getElementById('itemModel').value.trim(), 
+      date: document.getElementById('itemDate').value, status: document.getElementById('itemStatus').value, tier: document.getElementById('itemTier').value,
+      cost: parseFloat(document.getElementById('itemCost').value) || 0, expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0,
       actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value),
-      fees: parseFloat(document.getElementById('itemFees').value) || 0,
-      shipping: parseFloat(document.getElementById('itemShipping').value) || 0,
+      fees: parseFloat(document.getElementById('itemFees').value) || 0, shipping: parseFloat(document.getElementById('itemShipping').value) || 0,
       notes: document.getElementById('itemNotes').value.trim()
     };
 
     await setDoc(doc(db, "fliptrack_items", id), itemData);
+    logAudit(isNew ? `Added new item: ${name}` : `Updated item: ${name} (Status: ${itemData.status})`);
     closeModal(); loadData();
   };
 
   window.deleteItem = async function(id) {
     if (confirm('Delete this item?')) {
-      await deleteDoc(doc(db, "fliptrack_items", id)); loadData();
+      const it = inventory.find(i=>i.id===id);
+      await deleteDoc(doc(db, "fliptrack_items", id));
+      logAudit(`Deleted item: ${it ? it.name : id}`);
+      loadData();
     }
-  };
-
-  window.clearAll = async function() {
-    if (confirm('Delete ALL tracked items? This cannot be undone.')) {
-      const deletePromises = inventory.map(i => deleteDoc(doc(db, "fliptrack_items", i.id)));
-      await Promise.all(deletePromises); loadData();
-    }
-  };
-
-  window.copyListingTemplate = function(id) {
-    const item = inventory.find(i => i.id === id);
-    if (!item) return;
-    const title = `${item.brand ? item.brand + ' ' : ''}${item.name}${item.model ? ' ' + item.model : ''}`.trim();
-    const price = item.expectedSale ? `$${parseFloat(item.expectedSale).toFixed(2)}` : 'N/A';
-    const template = `🔥 ${title} 🔥\n\nBrand: ${item.brand || 'N/A'}\nModel: ${item.model || 'N/A'}\nCondition / Notes: ${item.notes || 'Tested and working. Clean condition.'}\nPrice: ${price}\n\nMessage if interested or have any questions!`;
-    navigator.clipboard.writeText(template).then(() => alert(`Copied template for "${item.name}"!`));
   };
 
   // --- HELPERS ---
+  window.closeOnOutsideClick = (e, id) => { if (e.target.id === id) document.getElementById(id).classList.remove('active'); };
   const calculateDaysInStock = d => { if(!d) return '—'; const diff = Math.floor((new Date() - new Date(d)) / 86400000); return diff < 0 ? '0d' : `${diff}d`; };
   const calculateProfit = i => (i.status === 'Sold' ? (parseFloat(i.actualSale)||0) : (parseFloat(i.expectedSale)||0)) - (parseFloat(i.cost)||0) - (parseFloat(i.fees)||0) - (parseFloat(i.shipping)||0);
   const formatMoney = n => (n === null || n === undefined || isNaN(n) || n === '') ? '—' : '$' + parseFloat(n).toFixed(2);
@@ -695,9 +855,16 @@
       if (`${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase().includes(search) && (statusFilter === 'All' || item.status === statusFilter)) {
         const profit = calculateProfit(item);
         const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
-        let tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick');
         
+        // ROI Calculation (#1)
+        const cost = parseFloat(item.cost) || 0;
+        const roi = cost > 0 ? Math.round((profit / cost) * 100) : 0;
+        const roiDisplay = roi > 0 ? `<div class="roi-tag">${roi}% ROI</div>` : (cost === 0 && profit > 0 ? `<div class="roi-tag" style="color:var(--accent)">100%+ ROI</div>` : '');
+
+        let tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick');
         const isChecked = selectedItems.has(item.id) ? 'checked' : '';
+
+        const feesDisplay = (parseFloat(item.fees) || 0) + (parseFloat(item.shipping) || 0);
 
         tbody.innerHTML += `
           <tr class="${isChecked ? 'selected' : ''}">
@@ -707,9 +874,8 @@
             <td>${formatMoney(item.cost)}</td>
             <td>${formatMoney(item.expectedSale)}</td>
             <td>${item.actualSale ? formatMoney(item.actualSale) : '—'}</td>
-            <td>${formatMoney(item.fees)}</td>
-            <td>${formatMoney(item.shipping)}</td>
-            <td class="profit-col ${pClass}">${profit >= 0 ? '+' : ''}${formatMoney(profit)}</td>
+            <td style="color:var(--muted);">${formatMoney(feesDisplay)}</td>
+            <td class="profit-col ${pClass}">${profit >= 0 ? '+' : ''}${formatMoney(profit)} ${roiDisplay}</td>
             <td><span class="pill status-${item.status.toLowerCase()}">${escapeHTML(item.status)}</span></td>
             <td class="action-btns"><button onclick="copyListingTemplate('${item.id}')" title="Copy Listing Template">📋</button><button onclick="editItem('${item.id}')">Edit</button></td>
           </tr>
@@ -717,41 +883,40 @@
       }
     });
 
-    if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="11" class="empty">No items found.</td></tr>`;
+    if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="10" class="empty">No items found.</td></tr>`;
 
-    // Calculate True Net Profit
     const totalExp = expenseData.reduce((acc, curr) => acc + curr.amount, 0);
     const trueNet = grossProfit - totalExp;
-
+    
     document.getElementById('stat-invested').innerText = formatMoney(invested);
     document.getElementById('stat-expected').innerText = formatMoney(expectedRevenue);
     document.getElementById('stat-gross').innerText = (grossProfit >= 0 ? '+' : '') + formatMoney(grossProfit);
     document.getElementById('stat-gross').className = `value ${grossProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
-    
     document.getElementById('stat-net').innerText = (trueNet >= 0 ? '+' : '') + formatMoney(trueNet);
     document.getElementById('stat-net').className = `value ${trueNet >= 0 ? 'profit-positive' : 'profit-negative'}`;
     
-    updateBulkToolbar();
+    const goalVal = parseFloat(localStorage.getItem('fliptrack_goal') || 1000);
+    const netClamped = Math.max(0, trueNet); 
+    let percent = (netClamped / goalVal) * 100;
+    if(percent > 100) percent = 100;
+    document.getElementById('goalCurrentTxt').innerText = formatMoney(netClamped);
+    document.getElementById('goalProgressBar').style.width = percent + '%';
+    document.getElementById('goalPercentTxt').innerText = `${percent.toFixed(1)}% completed`;
+
+    updateBulkToolbar(); updateChart();
   }
 
+  // Modal resets and logic
   window.openModal = function() { document.getElementById('itemForm').reset(); document.getElementById('itemId').value = ''; document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10); document.getElementById('itemTier').value = 'Quick Flip'; document.getElementById('modalTitle').innerText = 'Add Item'; document.getElementById('modalOverlay').classList.add('active'); };
-  window.editItem = function(id) {
-    const item = inventory.find(i => i.id === id); if (!item) return;
-    ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => {
-      document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? '';
-    });
-    document.getElementById('modalTitle').innerText = 'Edit Item'; document.getElementById('modalOverlay').classList.add('active');
-  };
+  window.editItem = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => { document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? ''; }); document.getElementById('modalTitle').innerText = 'Edit Item'; document.getElementById('modalOverlay').classList.add('active'); };
   window.closeModal = () => document.getElementById('modalOverlay').classList.remove('active');
-  window.closeOnOutsideClick = (e, id) => { if (e.target.id === id) document.getElementById(id).classList.remove('active'); };
   
-  window.exportCSV = function() {
-    if (inventory.length === 0) return alert('No inventory to export.');
-    const rows = inventory.map(i => [`"${escapeHTML(i.name)}"`,`"${escapeHTML(i.brand)}"`,`"${escapeHTML(i.model)}"`,`"${escapeHTML(i.tier)}"`,`"${i.date}"`,i.cost||0,i.expectedSale||0,i.actualSale||'',i.fees||0,i.shipping||0,calculateProfit(i),i.status,`"${escapeHTML(i.notes).replace(/"/g, '""')}"`].join(','));
-    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([['Item,Brand,Model,Tier,Purchase Date,Cost,Expected Sale,Actual Sale,Fees,Shipping,Profit,Status,Notes', ...rows].join('\n')], { type: 'text/csv' }));
-    link.download = 'fliptrack-inventory.csv'; link.click();
-  };
+  // CSV Import/Export
+  window.exportCSV = function() { if (inventory.length === 0) return alert('No inventory to export.'); logAudit('Exported CSV of database'); const rows = inventory.map(i => [`"${escapeHTML(i.name)}"`,`"${escapeHTML(i.brand)}"`,`"${escapeHTML(i.model)}"`,`"${escapeHTML(i.tier)}"`,`"${i.date}"`,i.cost||0,i.expectedSale||0,i.actualSale||'',i.fees||0,i.shipping||0,calculateProfit(i),i.status,`"${escapeHTML(i.notes).replace(/"/g, '""')}"`].join(',')); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([['Item,Brand,Model,Tier,Purchase Date,Cost,Expected Sale,Actual Sale,Fees,Shipping,Profit,Status,Notes', ...rows].join('\n')], { type: 'text/csv' })); link.download = 'fliptrack-inventory.csv'; link.click(); };
+  window.handleCSVImport = async function(e) { /* (Minified for brevity, retains logic) */ const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async function(evt) { const lines = evt.target.result.split('\n').filter(l => l.trim() !== ''); if(lines.length < 2) return; if(!confirm(`Import ${lines.length - 1} items?`)) { document.getElementById('csvUpload').value = ''; return; } const batch = writeBatch(db); for(let i = 1; i < lines.length; i++) { const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim()); if(row.length < 3) continue; const id = crypto.randomUUID(); batch.set(doc(db, "fliptrack_items", id), { name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'' }); } try { await batch.commit(); logAudit(`Bulk imported ${lines.length - 1} items from CSV.`); alert("Bulk import successful!"); document.getElementById('csvUpload').value = ''; loadData(); } catch (err) { alert("Import failed."); } }; reader.readAsText(file); };
   
+  window.copyListingTemplate = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; const template = `🔥 ${item.brand ? item.brand + ' ' : ''}${item.name}${item.model ? ' ' + item.model : ''} 🔥\n\nBrand: ${item.brand || 'N/A'}\nModel: ${item.model || 'N/A'}\nCondition / Notes: ${item.notes || 'Tested and working. Clean condition.'}\nPrice: ${item.expectedSale ? '$'+parseFloat(item.expectedSale).toFixed(2) : 'N/A'}\n\nMessage if interested!`; navigator.clipboard.writeText(template).then(() => alert(`Copied template for "${item.name}"!`)); };
+
   window.renderTable = renderTable;
 </script>
 </body>
