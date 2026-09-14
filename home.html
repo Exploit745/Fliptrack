@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlipTrack | The OS for Modern Resellers</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgDark: '#090a0c',
+            panel: '#111317',
+            panel2: '#17191e',
+            borderDark: '#292d35',
+            accent: '#00eaff',
+            neonGreen: '#58e68b',
+            neonYellow: '#fdff55',
+            neonPurple: '#c4a7ff',
+            mutedText: '#8d949e'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-bgDark text-slate-100 font-sans antialiased selection:bg-accent selection:text-black">
+
+  <!-- Background Glow -->
+  <div class="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_80%_-10%,rgba(0,234,255,0.08),transparent_40%)]"></div>
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-50 backdrop-blur-md border-b border-borderDark/60 bg-bgDark/80">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 border border-accent rounded-xl grid place-items-center text-accent text-xl font-black shadow-[0_0_20px_rgba(0,234,255,0.2)]">
+          ⚡
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight text-white block">FlipTrack</span>
+          <span class="text-xs text-mutedText block -mt-1 font-medium">by Disconnect Studios</span>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-mutedText">
+        <a href="#features" class="hover:text-accent transition">Features</a>
+        <a href="#bento" class="hover:text-accent transition">Analytics</a>
+        <a href="#pricing" class="hover:text-accent transition">Pricing</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a href="#pricing" class="hidden sm:inline-block text-sm font-semibold text-mutedText hover:text-white transition">Sign In</a>
+        <a href="#pricing" class="bg-accent text-black font-extrabold px-5 py-2.5 rounded-xl text-sm shadow-[0_0_25px_rgba(0,234,255,0.25)] hover:brightness-110 transition hover:scale-[1.02] active:scale-95">
+          Launch App &rarr;
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-24 pb-20 px-6 max-w-7xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-bold uppercase tracking-wider mb-8">
+      <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span> FlipTrack v3.0 Is Live
+    </div>
+
+    <h1 class="text-5xl md:text-7xl font-black tracking-tight max-w-4xl mx-auto leading-[1.1]">
+      Stop Guessing. <br />
+      <span class="bg-gradient-to-r from-accent via-neonPurple to-neonGreen bg-clip-text text-transparent">Start Scaling Your Flips.</span>
+    </h1>
+
+    <p class="mt-6 text-lg md:text-xl text-mutedText max-w-2xl mx-auto leading-relaxed">
+      The all-in-one dark-mode operating system built for resellers. Real-time P&L tracking, instant tax prep, batch processing, and custom BOLO engines.
+    </p>
+
+    <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <a href="#pricing" class="w-full sm:w-auto bg-accent text-black font-extrabold px-8 py-4 rounded-xl text-base shadow-[0_0_30px_rgba(0,234,255,0.3)] hover:brightness-110 transition hover:scale-[1.02] active:scale-95">
+        Start Free Trial
+      </a>
+      <a href="#demo" class="w-full sm:w-auto border border-borderDark bg-panel2 text-white font-semibold px-8 py-4 rounded-xl text-base hover:border-accent hover:text-accent transition">
+        View Live Demo
+      </a>
+    </div>
+
+    <!-- UI Mockup Frame -->
+    <div id="demo" class="mt-16 max-w-5xl mx-auto border border-borderDark rounded-2xl bg-panel overflow-hidden shadow-2xl relative group">
+      <div class="h-10 border-b border-borderDark bg-panel2/60 px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+        </div>
+        <span class="text-xs font-mono text-mutedText">fliptrack.app/dashboard</span>
+        <div class="w-12"></div>
+      </div>
+      
+      <!-- Interactive Preview Graphic -->
+      <div class="p-6 md:p-8 space-y-6 text-left">
+        <!-- Mock Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="border border-borderDark bg-panel2 p-4 rounded-xl">
+            <span class="text-xs text-mutedText uppercase font-bold tracking-wider">Total Invested</span>
+            <div class="text-2xl font-black text-neonYellow mt-1">$1,480.00</div>
+          </div>
+          <div class="border border-borderDark bg-panel2 p-4 rounded-xl">
+            <span class="text-xs text-mutedText uppercase font-bold tracking-wider">Expected Sales</span>
+            <div class="text-2xl font-black text-accent mt-1">$4,950.00</div>
+          </div>
+          <div class="border border-borderDark bg-panel2 p-4 rounded-xl">
+            <span class="text-xs text-mutedText uppercase font-bold tracking-wider">Gross Profit</span>
+            <div class="text-2xl font-black text-neonGreen mt-1">+$2,840.00</div>
+          </div>
+          <div class="border border-neonGreen/40 bg-neonGreen/5 p-4 rounded-xl">
+            <span class="text-xs text-neonGreen uppercase font-bold tracking-wider">True Net Profit</span>
+            <div class="text-2xl font-black text-neonGreen mt-1">+$2,410.50</div>
+          </div>
+        </div>
+
+        <!-- Mock Table -->
+        <div class="border border-borderDark rounded-xl overflow-hidden bg-bgDark">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-panel2 border-b border-borderDark text-mutedText uppercase tracking-wider">
+              <tr>
+                <th class="p-3">Item</th>
+                <th class="p-3">Cost</th>
+                <th class="p-3">Actual Sale</th>
+                <th class="p-3">Net Profit</th>
+                <th class="p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-borderDark text-slate-300">
+              <tr>
+                <td class="p-3 font-bold text-white">Sony Walkman WM-F41 <span class="text-mutedText font-normal block text-[10px]">⚡ Quick Flip</span></td>
+                <td class="p-3">$12.00</td>
+                <td class="p-3">$140.00</td>
+                <td class="p-3 text-neonGreen font-extrabold">+$108.50 <span class="text-[9px] bg-slate-800 text-mutedText px-1 py-0.5 rounded">904% ROI</span></td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neonGreen/10 text-neonGreen border border-neonGreen/30">SOLD</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 font-bold text-white">Arc'teryx Beta LT Jacket <span class="text-mutedText font-normal block text-[10px]">📦 Long Tail</span></td>
+                <td class="p-3">$45.00</td>
+                <td class="p-3">$280.00</td>
+                <td class="p-3 text-neonGreen font-extrabold">+$212.00 <span class="text-[9px] bg-slate-800 text-mutedText px-1 py-0.5 rounded">471% ROI</span></td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/10 text-accent border border-accent/30">LISTED</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Bento Grid -->
+  <section id="features" class="py-20 px-6 max-w-7xl mx-auto">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h2 class="text-3xl md:text-5xl font-black tracking-tight">Engineered for Sourcing & Profit.</h2>
+      <p class="mt-4 text-mutedText text-base">Everything you need to run a high-volume resale business without spreadsheet headaches.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Feature 1 -->
+      <div class="border border-borderDark bg-panel p-8 rounded-2xl space-y-4 hover:border-accent/50 transition">
+        <div class="w-12 h-12 rounded-xl bg-accent/10 text-accent border border-accent/30 grid place-items-center text-2xl">
+          📊
+        </div>
+        <h3 class="text-xl font-bold">Live P&L & ROI Engine</h3>
+        <p class="text-sm text-mutedText leading-relaxed">
+          Instantly view gross profit, net earnings, and individual item ROI percentages calculated automatically past platform fees and shipping labels.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="border border-borderDark bg-panel p-8 rounded-2xl space-y-4 hover:border-neonPurple/50 transition">
+        <div class="w-12 h-12 rounded-xl bg-neonPurple/10 text-neonPurple border border-neonPurple/30 grid place-items-center text-2xl">
+          📄
+        </div>
+        <h3 class="text-xl font-bold">Instant 1099 Tax Prep</h3>
+        <p class="text-sm text-mutedText leading-relaxed">
+          Never scramble in April again. Auto-compile COGS, gross sales revenue, shipping costs, and deductible supplies in one click.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="border border-borderDark bg-panel p-8 rounded-2xl space-y-4 hover:border-neonYellow/50 transition">
+        <div class="w-12 h-12 rounded-xl bg-neonYellow/10 text-neonYellow border border-neonYellow/30 grid place-items-center text-2xl">
+          👀
+        </div>
+        <h3 class="text-xl font-bold">Dynamic BOLO Watchlist</h3>
+        <p class="text-sm text-mutedText leading-relaxed">
+          Keep high-margin brands and rare vintage items organized by category. Add custom items to your database directly on your phone while thrifting.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="border border-borderDark bg-panel p-8 rounded-2xl space-y-4 hover:border-neonGreen/50 transition">
+        <div class="w-12 h-12 rounded-xl bg-neonGreen/10 text-neonGreen border border-neonGreen/30 grid place-items-center text-2xl">
+          📜
+        </div>
+        <h3 class="text-xl font-bold">Activity Audit Log</h3>
+        <p class="text-sm text-mutedText leading-relaxed">
+          A silent history trail logging every addition, price edit, sale, and batch operation with accurate timestamps for full record clarity.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="border border-borderDark bg-panel p-8 rounded-2xl space-y-4 md:col-span-2 hover:border-accent/50 transition">
+        <div class="w-12 h-12 rounded-xl bg-accent/10 text-accent border border-accent/30 grid place-items-center text-2xl">
+          ⚡
+        </div>
+        <h3 class="text-xl font-bold">Mobile Sourcing Polish & Hotkeys</h3>
+        <p class="text-sm text-mutedText leading-relaxed">
+          Built with an intuitive mobile UI including a floating quick-add button for live sourcing at thrift stores, alongside desktop hotkeys for power-user speed.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-16 px-6 max-w-7xl mx-auto">
+    <div class="border border-accent/40 bg-gradient-to-r from-panel via-panel2 to-bgDark p-10 md:p-16 rounded-3xl text-center space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(0,234,255,0.1)]">
+      <h2 class="text-3xl md:text-5xl font-black tracking-tight">Ready to Level Up Your Flip Game?</h2>
+      <p class="text-mutedText max-w-xl mx-auto text-base">Join thousands of resellers streamlining their inventory management and maximizing profits today.</p>
+      <a href="#pricing" class="inline-block bg-accent text-black font-extrabold px-8 py-4 rounded-xl text-base shadow-[0_0_30px_rgba(0,234,255,0.3)] hover:brightness-110 transition hover:scale-[1.02] active:scale-95">
+        Get Started with FlipTrack
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-borderDark/60 py-10 px-6 bg-bgDark">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 border border-accent rounded-lg grid place-items-center text-accent text-sm font-black">⚡</div>
+        <span class="font-bold text-white">FlipTrack</span>
+      </div>
+      <p class="text-xs text-mutedText">&copy; 2026 DISCONNECT STUDIOS L.L.C. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
