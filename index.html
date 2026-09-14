@@ -65,7 +65,7 @@
   .search-filters input { flex-grow: 1; min-width: 200px; }
   .bulk-actions { display: flex; gap: 9px; align-items: center; background: var(--panel2); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--border); }
   .bulk-actions select { padding: 6px; font-size: 12px; }
-  input, select, textarea { background: #0c0e12; color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 12px 10px; outline: none; width: 100%; font-size: 16px; /* 16px prevents iOS zoom */ }
+  input, select, textarea { background: #0c0e12; color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 12px 10px; outline: none; width: 100%; font-size: 16px; }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,234,255,.08); }
   input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
@@ -172,6 +172,7 @@
       </div>
     </div>
     <div class="actions header-actions">
+      <button onclick="window.location.href='tools.html'" style="color: var(--accent); border-color: rgba(0,234,255,0.3);">🛠️ Tools Suite</button>
       <button onclick="openBoloModal()" style="color: var(--yellow); border-color: rgba(253,255,85,0.3);">👀 BOLO List</button>
       <button onclick="openTaxModal()" style="color: var(--green); border-color: rgba(88,230,139,0.3);">📄 Tax Prep</button>
       <button onclick="openAuditModal()" style="color: var(--muted);">📜 Audit Log</button>
@@ -468,7 +469,6 @@
     'Misc': ['Lego Sets (Complete)', 'Vintage Snap-On Tools', 'High-end Golf Clubs']
   };
 
-  // --- KEYBOARD SHORTCUTS (#15) ---
   document.addEventListener('keydown', (e) => {
     if(e.target.matches('input, textarea, select')) return;
     if(e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
@@ -476,7 +476,6 @@
     if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); }
   });
 
-  // --- AUTH ---
   window.handlePasswordUnlock = function(e) { e.preventDefault(); if (document.getElementById('masterPasswordInput').value === MASTER_PASSWORD) { localStorage.setItem('fliptrack_unlocked', 'true'); document.getElementById('passOverlay').classList.add('hidden'); loadData(); } else { alert("Incorrect password."); document.getElementById('masterPasswordInput').value = ''; } };
   window.lockApp = function() { localStorage.removeItem('fliptrack_unlocked'); document.getElementById('passOverlay').classList.remove('hidden'); document.getElementById('masterPasswordInput').value = ''; inventory = []; expenseData = []; renderTable(); };
   window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('fliptrack_unlocked') === 'true') { document.getElementById('passOverlay').classList.add('hidden'); loadData(); } document.getElementById('goalTargetTxt').innerText = localStorage.getItem('fliptrack_goal') || 1000; });
