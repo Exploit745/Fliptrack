@@ -30,7 +30,7 @@
   .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* TOOL GRID */
-  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; }
   .tool-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; }
   .tool-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
   .tool-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(0,234,255,0.08); border: 1px solid rgba(0,234,255,0.2); display: grid; place-items: center; font-size: 18px; color: var(--accent); }
@@ -43,10 +43,14 @@
   button.action-btn { background: var(--accent); color: #001115; border: 1px solid var(--accent); font-weight: 800; padding: 10px; border-radius: 9px; cursor: pointer; transition: all 0.2s; width: 100%; }
   button.action-btn:hover { filter: brightness(1.08); box-shadow: 0 0 15px rgba(0,234,255,0.3); }
 
-  /* FEE COMPARISON TABLE */
+  /* TABLES & OUTPUT BOXES */
   .fee-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
   .fee-table th { text-align: left; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px 6px; }
   .fee-table td { padding: 10px 6px; border-bottom: 1px solid #1a1e26; }
+
+  .output-box { background: #0c0e12; border: 1px solid var(--border); padding: 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .output-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .output-val { font-weight: 800; color: var(--accent); }
 
   /* UPLOAD DROPZONE */
   .dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; color: var(--muted); cursor: pointer; transition: border-color 0.2s; background: #0c0e12; }
@@ -54,7 +58,6 @@
   
   /* SCANNER CONTAINER */
   #reader video { border-radius: 12px; object-fit: cover; }
-  
   .preview-thumb { max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; display: none; }
 </style>
 </head>
@@ -84,12 +87,10 @@
         </div>
       </div>
       
-      <!-- Live Viewfinder Feed -->
-      <div id="reader" style="width: 100%; min-height: 200px; background: #000; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--muted);">
+      <div id="reader" style="width: 100%; min-height: 180px; background: #000; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--muted);">
         <span id="viewfinderPlaceholder" style="font-size: 12px;">Camera Offline</span>
       </div>
       
-      <!-- Live Scan Output -->
       <div id="scanResult" style="display:none; background:rgba(88,230,139,0.1); border:1px solid var(--green); color:var(--green); padding:12px; border-radius:9px; text-align:center; font-weight:bold; font-family:monospace; font-size:15px;"></div>
 
       <div style="display: flex; gap: 10px;">
@@ -126,13 +127,119 @@
             <th>Net Profit</th>
           </tr>
         </thead>
-        <tbody id="feeTableBody">
-          <!-- Injected via JS -->
-        </tbody>
+        <tbody id="feeTableBody"></tbody>
       </table>
     </div>
 
-    <!-- CARD 3: RECEIPT & PHOTO VAULT -->
+    <!-- CARD 3: TARGET PRICE & BREAK-EVEN CALCULATOR -->
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon" style="color:var(--accent); border-color:rgba(0,234,255,0.3); background:rgba(0,234,255,0.08)">🎯</div>
+        <div>
+          <h2>Target Price & Break-Even</h2>
+          <small style="color:var(--muted)">Calculate required list price to hit net profit goals</small>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div>
+          <label>Item Cost ($)</label>
+          <input type="number" id="targetCost" value="20" oninput="calculateTargetPrices()">
+        </div>
+        <div>
+          <label>Desired Net Profit ($)</label>
+          <input type="number" id="targetProfit" value="30" oninput="calculateTargetPrices()">
+        </div>
+      </div>
+
+      <table class="fee-table">
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Min. Break-Even</th>
+            <th>Target List Price</th>
+          </tr>
+        </thead>
+        <tbody id="targetTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- CARD 4: SELL-THROUGH VELOCITY PLANNER -->
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon" style="color:var(--purple); border-color:rgba(196,167,255,0.3); background:rgba(196,167,255,0.08)">📈</div>
+        <div>
+          <h2>Sell-Through Velocity Planner</h2>
+          <small style="color:var(--muted)">Listing targets required to hit income goals</small>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div>
+          <label>Monthly Net Goal ($)</label>
+          <input type="number" id="velGoal" value="2000" oninput="calculateVelocity()">
+        </div>
+        <div>
+          <label>Avg. Net Profit / Flip ($)</label>
+          <input type="number" id="velAvgProfit" value="25" oninput="calculateVelocity()">
+        </div>
+      </div>
+
+      <div class="output-box">
+        <div class="output-row">
+          <span>Required Monthly Sales:</span>
+          <span class="output-val" id="velMonthlySales">0 items</span>
+        </div>
+        <div class="output-row">
+          <span>Listings Needed / Day:</span>
+          <span class="output-val" style="color:var(--yellow)" id="velDailyListings">0 / day</span>
+        </div>
+        <div class="output-row">
+          <span>Listings Needed / Week:</span>
+          <span class="output-val" style="color:var(--green)" id="velWeeklyListings">0 / week</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 5: SHIPPING RATE & DIM WEIGHT ESTIMATOR -->
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon" style="color:var(--yellow); border-color:rgba(253,255,85,0.3); background:rgba(253,255,85,0.08)">📦</div>
+        <div>
+          <h2>Shipping & DIM Weight Estimator</h2>
+          <small style="color:var(--muted)">Dimensional weight check & tier estimator</small>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div>
+          <label>Actual Weight (lbs)</label>
+          <input type="number" id="shipWeight" value="2" step="0.1" oninput="calculateShipping()">
+        </div>
+        <div>
+          <label>Box Dimensions (L x W x H in)</label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px;">
+            <input type="number" id="shipL" value="12" placeholder="L" oninput="calculateShipping()">
+            <input type="number" id="shipW" value="10" placeholder="W" oninput="calculateShipping()">
+            <input type="number" id="shipH" value="8" placeholder="H" oninput="calculateShipping()">
+          </div>
+        </div>
+      </div>
+
+      <div class="output-box">
+        <div class="output-row">
+          <span>Dimensional Weight (DIM):</span>
+          <span class="output-val" id="shipDimVal">0.0 lbs</span>
+        </div>
+        <div class="output-row">
+          <span>Billable Weight Tier:</span>
+          <span class="output-val" style="color:var(--yellow)" id="shipBilledVal">0 lbs</span>
+        </div>
+        <div class="output-row">
+          <span>Est. Shipping Class:</span>
+          <span class="output-val" style="color:var(--purple)" id="shipClassVal">Ground / Priority</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 6: RECEIPT & PHOTO VAULT -->
     <div class="tool-card">
       <div class="tool-header">
         <div class="tool-icon" style="color:var(--purple); border-color:rgba(196,167,255,0.3); background:rgba(196,167,255,0.08)">🧾</div>
@@ -154,7 +261,7 @@
 </div>
 
 <script>
-  // --- PLATFORM FEE CALCULATOR ---
+  // --- CARD 2: PLATFORM FEE CALCULATOR ---
   function calculateFees() {
     const price = parseFloat(document.getElementById('calcPrice').value) || 0;
     const cost = parseFloat(document.getElementById('calcCost').value) || 0;
@@ -185,7 +292,74 @@
     });
   }
 
-  // --- RECEIPT & PHOTO VAULT HANDLER ---
+  // --- CARD 3: TARGET PRICE & BREAK-EVEN CALCULATOR ---
+  function calculateTargetPrices() {
+    const cost = parseFloat(document.getElementById('targetCost').value) || 0;
+    const targetProfit = parseFloat(document.getElementById('targetProfit').value) || 0;
+
+    const platforms = [
+      { name: 'eBay', rate: 0.1325, flat: 0.30 },
+      { name: 'Mercari', rate: 0.10, flat: 0.50 },
+      { name: 'Poshmark', rate: 0.20, flat: 0.00 },
+      { name: 'Depop', rate: 0.10, flat: 0.00 },
+      { name: 'Local Cash', rate: 0.00, flat: 0.00 }
+    ];
+
+    const tbody = document.getElementById('targetTableBody');
+    tbody.innerHTML = '';
+
+    platforms.forEach(p => {
+      // Formula: SalePrice = (Cost + Profit + FlatFee) / (1 - FeeRate)
+      const breakEven = (cost + p.flat) / (1 - p.rate);
+      const targetList = (cost + targetProfit + p.flat) / (1 - p.rate);
+
+      tbody.innerHTML += `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td style="color:var(--muted);">$${breakEven.toFixed(2)}</td>
+          <td style="color:var(--accent); font-weight:bold;">$${targetList.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // --- CARD 4: SELL-THROUGH VELOCITY PLANNER ---
+  function calculateVelocity() {
+    const goal = parseFloat(document.getElementById('velGoal').value) || 0;
+    const avgProfit = parseFloat(document.getElementById('velAvgProfit').value) || 1;
+
+    const totalSalesNeeded = Math.ceil(goal / avgProfit);
+    const dailyNeeded = (totalSalesNeeded / 30).toFixed(1);
+    const weeklyNeeded = Math.ceil(totalSalesNeeded / 4.33);
+
+    document.getElementById('velMonthlySales').innerText = `${totalSalesNeeded} items`;
+    document.getElementById('velDailyListings').innerText = `${dailyNeeded} / day`;
+    document.getElementById('velWeeklyListings').innerText = `${weeklyNeeded} / week`;
+  }
+
+  // --- CARD 5: SHIPPING & DIM WEIGHT ESTIMATOR ---
+  function calculateShipping() {
+    const actWeight = parseFloat(document.getElementById('shipWeight').value) || 0;
+    const l = parseFloat(document.getElementById('shipL').value) || 0;
+    const w = parseFloat(document.getElementById('shipW').value) || 0;
+    const h = parseFloat(document.getElementById('shipH').value) || 0;
+
+    // Standard carrier DIM divisor is 139
+    const dimWeight = (l * w * h) / 139;
+    const billedWeight = Math.max(actWeight, dimWeight);
+
+    document.getElementById('shipDimVal').innerText = `${dimWeight.toFixed(2)} lbs`;
+    document.getElementById('shipBilledVal').innerText = `${Math.ceil(billedWeight)} lbs`;
+
+    let shipClass = "Ground Advantage / Cubic";
+    if (billedWeight <= 1) shipClass = "First Class / USPS Ground (< 1 lb)";
+    else if (billedWeight > 20 || (l * w * h) > 1728) shipClass = "Heavy / Oversized (UPS/FedEx Ground)";
+    else shipClass = "USPS Priority / UPS Ground";
+
+    document.getElementById('shipClassVal').innerText = shipClass;
+  }
+
+  // --- CARD 6: RECEIPT & PHOTO VAULT HANDLER ---
   function handleReceiptUpload(e) {
     const file = e.target.files[0];
     if (file) {
@@ -221,27 +395,21 @@
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 150 } },
       (decodedText) => {
-        // 1. Render UPC text
         const resultEl = document.getElementById('scanResult');
         resultEl.innerHTML = `UPC Captured: <span>${decodedText}</span>`;
         resultEl.style.display = 'block';
 
-        // 2. Copy UPC to clipboard
         if (navigator.clipboard) {
           navigator.clipboard.writeText(decodedText).catch(e => console.error("Clipboard write error:", e));
         }
 
-        // 3. Open eBay sold comps in a new tab
         const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(decodedText)}&LH_Sold=1&LH_Complete=1`;
         window.open(ebayUrl, '_blank');
 
-        // 4. Haptic feedback and stop camera
         if (navigator.vibrate) navigator.vibrate(200);
         stopScanner();
       },
-      () => {
-        // Continuous scan loop frame tick
-      }
+      () => {}
     ).catch((err) => {
       alert(`Camera access error: ${err}`);
       stopScanner();
@@ -262,6 +430,9 @@
 
   // Initial calculation load
   calculateFees();
+  calculateTargetPrices();
+  calculateVelocity();
+  calculateShipping();
 </script>
 </body>
 </html>
