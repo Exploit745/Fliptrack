@@ -7,58 +7,133 @@
 <title>FlipTrack | Utility Suite</title>
 <!-- Html5Qrcode Barcode Engine -->
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<!-- Obsidian Glass Typography -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #090a0c; --panel: #111317; --panel2: #17191e; --text: #f4f6f8;
-    --muted: #8d949e; --border: #292d35; --accent: #00eaff; --yellow: #fdff55;
-    --green: #58e68b; --red: #ff5f6d; --purple: #c4a7ff;
-    --shadow: 0 12px 35px rgba(0,0,0,.28);
+    /* Obsidian Glass Color System */
+    --bg-base: #0B0E14;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-hover: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    
+    --accent-blue: #60A5FA;
+    --accent-purple: #A78BFA;
+    --accent-glow: rgba(96, 165, 250, 0.2);
+    
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+
+    --shadow: 0 16px 40px rgba(0,0,0,0.4);
+    --blur: blur(16px);
+
+    /* Legacy Map (Ensures all your existing JS math & inline styling stays functional) */
+    --bg: var(--bg-base);
+    --panel: rgba(11, 14, 20, 0.6);
+    --panel2: var(--glass-bg);
+    --text: var(--text-main);
+    --muted: var(--text-muted);
+    --border: var(--glass-border);
+    --accent: var(--accent-blue);
+    --yellow: #FBBF24;
+    --green: #34D399;
+    --red: #F87171;
+    --purple: var(--accent-purple);
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(circle at 80% -10%, rgba(0,234,255,.08), transparent 30%), var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-  button, input, select, textarea { font: inherit; }
-  .wrap { max-width: 1400px; margin: auto; padding: 24px; }
   
-  header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 42px; height: 42px; border: 1px solid var(--accent); border-radius: 12px; display: grid; place-items: center; color: var(--accent); font-size: 1.2rem; font-weight: 900; box-shadow: 0 0 22px rgba(0,234,255,.15); }
+  * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+  
+  body { 
+    margin: 0; 
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(circle at 15% 0%, rgba(167, 139, 250, 0.08), transparent 35%),
+      radial-gradient(circle at 85% 100%, rgba(96, 165, 250, 0.08), transparent 35%);
+    background-attachment: fixed;
+    color: var(--text-main); 
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  button, input, select, textarea { font: inherit; }
+  .wrap { max-width: 1400px; margin: auto; padding: 32px 24px; }
+  
+  /* HEADER */
+  header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 32px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 46px; height: 46px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; display: grid; place-items: center; color: var(--accent-blue); font-size: 1.4rem; font-weight: 900; box-shadow: var(--shadow); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
   h1, h2, h3, p { margin: 0; }
-  .brand h1 { font-size: 22px; color: var(--text); }
-  .brand small { color: var(--muted); }
+  .brand h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+  .brand small { color: var(--text-muted); font-size: 12px; font-weight: 500; }
 
-  .nav-btn { display: inline-block; border: 1px solid var(--border); background: var(--panel2); color: var(--text); padding: 9px 15px; border-radius: 9px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 13px; text-decoration: none; }
-  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* NAVIGATION */
+  .nav-btn { 
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); 
+    padding: 10px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; 
+    font-weight: 500; font-size: 13px; text-decoration: none;
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  }
+  .nav-btn:hover { background: var(--glass-hover); border-color: var(--accent-blue); box-shadow: 0 0 15px var(--accent-glow); }
 
-  /* TOOL GRID */
+  /* TOOL GRID & CARDS */
   .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; }
-  .tool-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; }
-  .tool-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
-  .tool-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(0,234,255,0.08); border: 1px solid rgba(0,234,255,0.2); display: grid; place-items: center; font-size: 18px; color: var(--accent); }
-  .tool-header h2 { font-size: 16px; font-weight: 750; color: #fff; }
+  .tool-card { 
+    background: var(--panel); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); 
+    border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; 
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; 
+    transition: transform 0.2s;
+  }
+  .tool-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+  
+  .tool-header { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; }
+  .tool-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 18px; color: var(--accent); }
+  .tool-header h2 { font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: -0.01em; }
 
-  input, select, textarea { background: #0c0e12; color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 10px; outline: none; width: 100%; }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,234,255,.08); }
-  label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; display: block; margin-bottom: 4px; }
+  /* INPUTS */
+  input, select, textarea { 
+    background: rgba(0,0,0,0.3); color: var(--text-main); 
+    border: 1px solid var(--glass-border); border-radius: 10px; 
+    padding: 12px 14px; outline: none; width: 100%; font-size: 14px; 
+    transition: all 0.2s; backdrop-filter: var(--blur);
+  }
+  input::placeholder, textarea::placeholder { color: #475569; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--accent-glow); background: rgba(0,0,0,0.5); }
+  label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; display: block; margin-bottom: 6px; }
 
-  button.action-btn { background: var(--accent); color: #001115; border: 1px solid var(--accent); font-weight: 800; padding: 10px; border-radius: 9px; cursor: pointer; transition: all 0.2s; width: 100%; }
-  button.action-btn:hover { filter: brightness(1.08); box-shadow: 0 0 15px rgba(0,234,255,0.3); }
+  /* BUTTONS */
+  button.action-btn { 
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); 
+    color: #000; border: none; font-weight: 700; padding: 12px; border-radius: 10px; 
+    cursor: pointer; transition: all 0.2s ease; width: 100%; 
+  }
+  button.action-btn:hover { 
+    background: linear-gradient(135deg, #7db3fa, #b8a1fa); 
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); transform: translateY(-1px); 
+  }
+  
+  /* Specific Camera Buttons */
+  button#startScanBtn { background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border); font-weight: 600; }
+  button#startScanBtn:hover { background: var(--glass-hover); border-color: var(--accent-blue); box-shadow: 0 0 15px var(--accent-glow); color: var(--text-main); transform: translateY(-1px); }
+  button#stopScanBtn { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: var(--danger); font-weight: 600; }
+  button#stopScanBtn:hover { background: rgba(248, 113, 113, 0.15); border-color: var(--danger); box-shadow: none; }
 
   /* TABLES & OUTPUT BOXES */
-  .fee-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
-  .fee-table th { text-align: left; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px 6px; }
-  .fee-table td { padding: 10px 6px; border-bottom: 1px solid #1a1e26; }
+  .fee-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .fee-table th { text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); padding: 10px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .fee-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-  .output-box { background: #0c0e12; border: 1px solid var(--border); padding: 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .output-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-  .output-val { font-weight: 800; color: var(--accent); }
+  .output-box { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; backdrop-filter: var(--blur); }
+  .output-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-main); }
+  .output-val { font-weight: 700; color: var(--accent-blue); }
 
   /* UPLOAD DROPZONE */
-  .dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; color: var(--muted); cursor: pointer; transition: border-color 0.2s; background: #0c0e12; }
-  .dropzone:hover { border-color: var(--accent); color: var(--text); }
+  .dropzone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; color: var(--text-muted); cursor: pointer; transition: all 0.2s; background: rgba(0,0,0,0.2); backdrop-filter: var(--blur); }
+  .dropzone:hover { border-color: var(--accent-blue); background: rgba(96, 165, 250, 0.05); color: var(--text-main); }
   
   /* SCANNER CONTAINER */
   #reader video { border-radius: 12px; object-fit: cover; }
-  .preview-thumb { max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; display: none; }
+  .preview-thumb { max-width: 100%; max-height: 180px; border-radius: 10px; border: 1px solid var(--glass-border); margin-top: 12px; display: none; }
 </style>
 </head>
 <body>
@@ -69,7 +144,7 @@
       <div class="logo">⚡</div>
       <div>
         <h1>FlipTrack Utility Suite</h1>
-        <small>Power-user tools & automated workflows</small>
+        <small>Obsidian Glass Edition</small>
       </div>
     </div>
     <a href="index.html" class="nav-btn">&larr; Back to Dashboard</a>
@@ -80,35 +155,35 @@
     <!-- CARD 1: MOBILE BARCODE & UPC SCANNER -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--yellow); border-color:rgba(253,255,85,0.3); background:rgba(253,255,85,0.08)">📷</div>
+        <div class="tool-icon" style="color:var(--yellow); border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.08)">📷</div>
         <div>
           <h2>UPC & Barcode Lookup</h2>
           <small style="color:var(--muted)">Scan physical items to launch instant eBay sold comps</small>
         </div>
       </div>
       
-      <div id="reader" style="width: 100%; min-height: 180px; background: #000; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--muted);">
-        <span id="viewfinderPlaceholder" style="font-size: 12px;">Camera Offline</span>
+      <div id="reader" style="width: 100%; min-height: 180px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--muted);">
+        <span id="viewfinderPlaceholder" style="font-size: 12px; font-weight: 500;">Camera Offline</span>
       </div>
       
-      <div id="scanResult" style="display:none; background:rgba(88,230,139,0.1); border:1px solid var(--green); color:var(--green); padding:12px; border-radius:9px; text-align:center; font-weight:bold; font-family:monospace; font-size:15px;"></div>
+      <div id="scanResult" style="display:none; background:rgba(52,211,153,0.1); border:1px solid var(--green); color:var(--green); padding:12px; border-radius:10px; text-align:center; font-weight:600; font-family:monospace; font-size:15px; letter-spacing: 0.02em;"></div>
 
       <div style="display: flex; gap: 10px;">
-        <button class="action-btn" id="startScanBtn" style="background:var(--panel2); color:var(--text); border-color:var(--border);" onclick="startScanner()">Activate Camera</button>
-        <button class="action-btn" id="stopScanBtn" style="display:none; background:rgba(255,95,109,0.1); color:var(--red); border-color:var(--red);" onclick="stopScanner()">Stop Camera</button>
+        <button class="action-btn" id="startScanBtn" onclick="startScanner()">Activate Camera</button>
+        <button class="action-btn" id="stopScanBtn" style="display:none;" onclick="stopScanner()">Stop Camera</button>
       </div>
     </div>
 
     <!-- CARD 2: PLATFORM FEE CALCULATOR -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--green); border-color:rgba(88,230,139,0.3); background:rgba(88,230,139,0.08)">💰</div>
+        <div class="tool-icon" style="color:var(--green); border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.08)">💰</div>
         <div>
           <h2>Platform Fee Breakdown</h2>
           <small style="color:var(--muted)">Real-time profit matrix across marketplaces</small>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
           <label>Sale Price ($)</label>
           <input type="number" id="calcPrice" value="100" oninput="calculateFees()">
@@ -134,13 +209,13 @@
     <!-- CARD 3: TARGET PRICE & BREAK-EVEN CALCULATOR -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--accent); border-color:rgba(0,234,255,0.3); background:rgba(0,234,255,0.08)">🎯</div>
+        <div class="tool-icon" style="color:var(--accent); border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.08)">🎯</div>
         <div>
           <h2>Target Price & Break-Even</h2>
           <small style="color:var(--muted)">Calculate required list price to hit net profit goals</small>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
           <label>Item Cost ($)</label>
           <input type="number" id="targetCost" value="20" oninput="calculateTargetPrices()">
@@ -166,13 +241,13 @@
     <!-- CARD 4: SELL-THROUGH VELOCITY PLANNER -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--purple); border-color:rgba(196,167,255,0.3); background:rgba(196,167,255,0.08)">📈</div>
+        <div class="tool-icon" style="color:var(--purple); border-color:rgba(167,139,250,0.3); background:rgba(167,139,250,0.08)">📈</div>
         <div>
           <h2>Sell-Through Velocity Planner</h2>
           <small style="color:var(--muted)">Listing targets required to hit income goals</small>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
           <label>Monthly Net Goal ($)</label>
           <input type="number" id="velGoal" value="2000" oninput="calculateVelocity()">
@@ -202,20 +277,20 @@
     <!-- CARD 5: SHIPPING RATE & DIM WEIGHT ESTIMATOR -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--yellow); border-color:rgba(253,255,85,0.3); background:rgba(253,255,85,0.08)">📦</div>
+        <div class="tool-icon" style="color:var(--yellow); border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.08)">📦</div>
         <div>
           <h2>Shipping & DIM Weight Estimator</h2>
           <small style="color:var(--muted)">Dimensional weight check & tier estimator</small>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
           <label>Actual Weight (lbs)</label>
           <input type="number" id="shipWeight" value="2" step="0.1" oninput="calculateShipping()">
         </div>
         <div>
           <label>Box Dimensions (L x W x H in)</label>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
             <input type="number" id="shipL" value="12" placeholder="L" oninput="calculateShipping()">
             <input type="number" id="shipW" value="10" placeholder="W" oninput="calculateShipping()">
             <input type="number" id="shipH" value="8" placeholder="H" oninput="calculateShipping()">
@@ -242,7 +317,7 @@
     <!-- CARD 6: RECEIPT & PHOTO VAULT -->
     <div class="tool-card">
       <div class="tool-header">
-        <div class="tool-icon" style="color:var(--purple); border-color:rgba(196,167,255,0.3); background:rgba(196,167,255,0.08)">🧾</div>
+        <div class="tool-icon" style="color:var(--purple); border-color:rgba(167,139,250,0.3); background:rgba(167,139,250,0.08)">🧾</div>
         <div>
           <h2>Receipt & Visual Vault</h2>
           <small style="color:var(--muted)">Attach purchase proof & inventory photos</small>
@@ -250,11 +325,11 @@
       </div>
       <div class="dropzone" id="dropArea" onclick="document.getElementById('receiptFile').click()">
         <div>📁 Drop receipt or item photo here</div>
-        <small style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">Click to browse files (PNG, JPG, PDF)</small>
+        <small style="color:var(--muted); font-size:11px; margin-top:6px; display:block; font-weight: 500;">Click to browse files (PNG, JPG, PDF)</small>
         <input type="file" id="receiptFile" accept="image/*,application/pdf" style="display:none;" onchange="handleReceiptUpload(event)">
       </div>
       <img id="receiptPreview" class="preview-thumb" alt="Receipt Preview">
-      <div id="receiptStatus" style="font-size:12px; color:var(--green); text-align:center;"></div>
+      <div id="receiptStatus" style="font-size:12px; color:var(--green); text-align:center; font-weight: 600;"></div>
     </div>
 
   </div>
