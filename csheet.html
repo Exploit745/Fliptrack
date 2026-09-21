@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlipTrack | STR Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Obsidian Glass Color System */
+    --bg-base: #0B0E14;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-hover: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    
+    --accent-blue: #60A5FA;
+    --accent-purple: #A78BFA;
+    --accent-glow: rgba(96, 165, 250, 0.2);
+    
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+
+    --shadow: 0 16px 40px rgba(0,0,0,0.4);
+    --blur: blur(16px);
+  }
+
+  * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+
+  body { 
+    margin: 0; 
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(circle at 15% 0%, rgba(167, 139, 250, 0.05), transparent 35%),
+      radial-gradient(circle at 85% 100%, rgba(96, 165, 250, 0.05), transparent 35%);
+    background-attachment: fixed;
+    color: var(--text-main); 
+    font-size: 14px;
+    line-height: 1.5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 20px 24px; border-bottom: 1px solid var(--glass-border);
+    background: rgba(11, 14, 20, 0.8); backdrop-filter: var(--blur); z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 40px; height: 40px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px; display: grid; place-items: center; color: var(--accent-blue); font-size: 1.2rem; font-weight: 900; box-shadow: var(--shadow); }
+  h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  small { color: var(--text-muted); font-size: 12px; font-weight: 500; }
+
+  .nav-btn { 
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); 
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; 
+    font-weight: 500; font-size: 13px; text-decoration: none;
+  }
+  .nav-btn:hover { background: var(--glass-hover); border-color: var(--accent-blue); box-shadow: 0 0 15px var(--accent-glow); }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.2); align-items: center;
+  }
+  input, select { 
+    background: rgba(0,0,0,0.3); color: var(--text-main); 
+    border: 1px solid var(--glass-border); border-radius: 8px; 
+    padding: 10px 14px; outline: none; font-size: 13px; transition: all 0.2s; 
+  }
+  input:focus, select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--accent-glow); background: rgba(0,0,0,0.5); }
+  .search-bar { flex-grow: 1; max-width: 400px; }
+  
+  .legend { display: flex; gap: 16px; font-size: 12px; font-weight: 600; margin-left: auto; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.hot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .dot.warm { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  .dot.cold { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+  /* MAIN LAYOUT */
+  .main-content {
+    display: flex; flex-grow: 1; overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-width: 240px; border-right: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.2); overflow-y: auto; padding: 16px 0;
+  }
+  .brand-btn {
+    width: 100%; text-align: left; background: transparent; border: none;
+    color: var(--text-muted); padding: 10px 24px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between;
+  }
+  .brand-btn:hover { color: var(--text-main); background: var(--glass-hover); }
+  .brand-btn.active {
+    color: var(--accent-blue); background: rgba(96, 165, 250, 0.08);
+    border-right: 3px solid var(--accent-blue); font-weight: 700;
+  }
+  .brand-count { font-size: 11px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
+
+  /* TABLE CONTAINER */
+  .table-container {
+    flex-grow: 1; overflow: auto; position: relative;
+    background: var(--glass-bg);
+  }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 13px; }
+  
+  th, td { 
+    padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); 
+    border-right: 1px solid rgba(255,255,255,0.03); white-space: nowrap;
+  }
+  
+  thead th { 
+    background: rgba(11, 14, 20, 0.95); backdrop-filter: var(--blur);
+    color: var(--text-muted); font-size: 11px; text-transform: uppercase; 
+    letter-spacing: 0.05em; font-weight: 700; position: sticky; top: 0; z-index: 10;
+    cursor: pointer; user-select: none; transition: color 0.2s;
+  }
+  thead th:hover { color: var(--text-main); }
+  
+  /* Sticky First Columns */
+  thead th:nth-child(1), tbody td:nth-child(1) { position: sticky; left: 0; z-index: 20; background: rgba(11, 14, 20, 0.95); text-align: left; font-weight: 600; padding-left: 24px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+  thead th:nth-child(2), tbody td:nth-child(2) { position: sticky; left: 200px; z-index: 20; background: rgba(11, 14, 20, 0.95); color: var(--text-muted); box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+  thead th:nth-child(1), thead th:nth-child(2) { z-index: 30; } 
+
+  td:nth-child(1) { width: 200px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+  
+  .col-overall { font-weight: 800; border-right: 2px solid var(--glass-border) !important; }
+
+  /* STR Color Coding Cells */
+  .str-hot { color: var(--success); background: rgba(52, 211, 153, 0.08); font-weight: 700; }
+  .str-warm { color: var(--warning); background: rgba(251, 191, 36, 0.08); font-weight: 600; }
+  .str-cold { color: var(--danger); background: rgba(248, 113, 113, 0.08); font-weight: 500; }
+  .str-null { color: var(--text-muted); background: transparent; }
+
+  table tr:hover td { filter: brightness(1.2); }
+
+  /* Sub-Header specific styling (for Letter Sizes) */
+  tbody .sub-header th {
+    position: static;
+    color: var(--accent-blue);
+    background: rgba(11, 14, 20, 0.95);
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    font-weight: 800;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  tbody .sub-header th:nth-child(1) { position: sticky; left: 0; z-index: 20; text-align: left; padding-left: 24px; }
+  tbody .sub-header th:nth-child(2) { position: sticky; left: 200px; z-index: 20; }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>
+        <h1>FlipTrack</h1>
+        <small>Sell-Through Rate (STR)</small>
+      </div>
+    </div>
+    <a href="index.html" class="nav-btn">&larr; Back to Dashboard</a>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="searchBar" class="search-bar" placeholder="Search models (e.g. 501, Button Down)..." oninput="renderTable()">
+    
+    <select id="minStrFilter" onchange="renderTable()">
+      <option value="0">All Sell-Through Rates</option>
+      <option value="75">🔥 Absolute Fire (> 75%)</option>
+      <option value="50">🟢 Good (> 50%)</option>
+      <option value="30">🟡 Warm (> 30%)</option>
+    </select>
+
+    <div class="legend">
+      <div class="legend-item"><div class="dot hot"></div> 50%+ Hot</div>
+      <div class="legend-item"><div class="dot warm"></div> 30-49% Avg</div>
+      <div class="legend-item"><div class="dot cold"></div> < 30% Pass</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    
+    <!-- BRAND SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="table-container">
+      <table id="strTable">
+        <thead>
+          <tr>
+            <th onclick="handleSort('model')" style="text-align:left; padding-left:24px;">Model Name ↕</th>
+            <th onclick="handleSort('avgPrice')">AVG $ ↕</th>
+            <th onclick="handleSort('overall')" class="col-overall">Overall STR ↕</th>
+            <th onclick="handleSort(28)">28 ↕</th>
+            <th onclick="handleSort(29)">29 ↕</th>
+            <th onclick="handleSort(30)">30 ↕</th>
+            <th onclick="handleSort(31)">31 ↕</th>
+            <th onclick="handleSort(32)">32 ↕</th>
+            <th onclick="handleSort(33)">33 ↕</th>
+            <th onclick="handleSort(34)">34 ↕</th>
+            <th onclick="handleSort(35)">35 ↕</th>
+            <th onclick="handleSort(36)">36 ↕</th>
+            <th onclick="handleSort(38)">38 ↕</th>
+            <th onclick="handleSort(40)">40 ↕</th>
+            <th onclick="handleSort(42)">42 ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Injected via JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+<script>
+  // --- FLIPTRACK MASTER DATABASE (RESTORED + EXPANDED) ---
+  const database = {
+    "Modern Levi's": [
+      { type: 'waist', model: "469 Jean Shorts", avgPrice: "$20-$25", overall: 80, sizes: {28:0, 29:67, 30:50, 31:86, 32:71, 33:42, 34:92, 35:0, 36:96, 38:141, 40:58, 42:64} },
+      { type: 'waist', model: "501 Original (Standard Wash)", avgPrice: "$20-$35", overall: 28, sizes: {28:15, 29:18, 30:25, 31:28, 32:32, 33:30, 34:33, 35:20, 36:35, 38:29, 40:22, 42:25} },
+      { type: 'waist', model: "501 Shrink To Fit (Rigid)", avgPrice: "$45-$65", overall: 52, sizes: {28:30, 29:32, 30:45, 31:48, 32:55, 33:53, 34:65, 35:40, 36:72, 38:60, 40:55, 42:48} },
+      { type: 'waist', model: "502 Corduroy Pants", avgPrice: "$20-$25", overall: 38, sizes: {28:0, 29:30, 30:33, 31:28, 32:43, 33:65, 34:58, 35:0, 36:31, 38:31, 40:25, 42:33} },
+      { type: 'waist', model: "502 Taper Jeans", avgPrice: "$20-$25", overall: 37, sizes: {28:13, 29:16, 30:14, 31:31, 32:42, 33:36, 34:80, 35:36, 36:49, 38:35, 40:42, 42:39} },
+      { type: 'waist', model: "505 Corduroy Pants", avgPrice: "$25-$30", overall: 32, sizes: {28:0, 29:20, 30:23, 31:30, 32:44, 33:75, 34:36, 35:0, 36:20, 38:44, 40:25, 42:0} },
+      { type: 'waist', model: "505 Regular Fit", avgPrice: "$18-$25", overall: 22, sizes: {28:10, 29:12, 30:18, 31:20, 32:25, 33:23, 34:28, 35:15, 36:30, 38:25, 40:20, 42:18} },
+      { type: 'waist', model: "510 Skinny Jeans", avgPrice: "$20-$25", overall: 28, sizes: {28:17, 29:15, 30:22, 31:18, 32:39, 33:36, 34:45, 35:0, 36:62, 38:51, 40:50, 42:0} },
+      { type: 'waist', model: "511 Corduroy Pants", avgPrice: "$20-$25", overall: 61, sizes: {28:53, 29:19, 30:37, 31:50, 32:90, 33:81, 34:121, 35:0, 36:44, 38:78, 40:150, 42:67} },
+      { type: 'waist', model: "511 Slim Fit", avgPrice: "$18-$25", overall: 26, sizes: {28:22, 29:25, 30:35, 31:38, 32:40, 33:35, 34:25, 35:15, 36:20, 38:15, 40:10, 42:8} },
+      { type: 'waist', model: "512 Slim Taper Jeans", avgPrice: "$20-$25", overall: 41, sizes: {28:18, 29:10, 30:28, 31:42, 32:30, 33:74, 34:68, 35:0, 36:57, 38:48, 40:144, 42:67} },
+      { type: 'waist', model: "513 Slim Straight", avgPrice: "$20-$25", overall: 43, sizes: {28:22, 29:40, 30:34, 31:48, 32:54, 33:50, 34:64, 35:50, 36:45, 38:33, 40:22, 42:22} },
+      { type: 'waist', model: "514 Corduroy Pants", avgPrice: "$20-$25", overall: 49, sizes: {28:60, 29:7, 30:35, 31:27, 32:64, 33:66, 34:68, 35:13, 36:42, 38:60, 40:42, 42:100} },
+      { type: 'waist', model: "514 Straight Fit", avgPrice: "$20-$28", overall: 31, sizes: {28:15, 29:18, 30:28, 31:32, 32:38, 33:35, 34:40, 35:22, 36:35, 38:28, 40:25, 42:22} },
+      { type: 'waist', model: "517 Bootcut", avgPrice: "$35-$50", overall: 65, sizes: {28:40, 29:45, 30:65, 31:70, 32:85, 33:80, 34:75, 35:50, 36:60, 38:45, 40:40, 42:35} },
+      { type: 'waist', model: "527 Low Bootcut", avgPrice: "$20-$25", overall: 86, sizes: {28:57, 29:153, 30:189, 31:186, 32:174, 33:137, 34:92, 35:47, 36:52, 38:31, 40:21, 42:11} },
+      { type: 'waist', model: "541 Athletic Taper", avgPrice: "$20-$25", overall: 39, sizes: {28:100, 29:33, 30:20, 31:27, 32:54, 33:52, 34:59, 35:59, 36:62, 38:39, 40:30, 42:23} },
+      { type: 'waist', model: "550 Relaxed Fit", avgPrice: "$25-$40", overall: 55, sizes: {28:25, 29:28, 30:45, 31:50, 32:65, 33:60, 34:75, 35:40, 36:80, 38:70, 40:65, 42:55} },
+      { type: 'waist', model: "559 Relaxed Straight", avgPrice: "$20-$25", overall: 26, sizes: {28:300, 29:65, 30:46, 31:51, 32:40, 33:41, 34:41, 35:20, 36:29, 38:20, 40:19, 42:11} },
+      { type: 'waist', model: "560 Comfort Fit", avgPrice: "$20-$25", overall: 40, sizes: {28:0, 29:67, 30:18, 31:55, 32:35, 33:19, 34:49, 35:33, 36:37, 38:45, 40:51, 42:33} },
+      { type: 'waist', model: "569 Jean Shorts", avgPrice: "$20-$25", overall: 39, sizes: {28:0, 29:59, 30:32, 31:36, 32:47, 33:35, 34:51, 35:17, 36:42, 38:38, 40:31, 42:28} },
+      { type: 'waist', model: "569 Loose Straight", avgPrice: "$25-$35", overall: 48, sizes: {28:20, 29:25, 30:40, 31:45, 32:55, 33:50, 34:65, 35:35, 36:70, 38:60, 40:55, 42:50} },
+      { type: 'waist', model: "Baggy Cargo Shorts", avgPrice: "$20-$25", overall: 28, sizes: {28:0, 29:22, 30:18, 31:22, 32:24, 33:26, 34:54, 35:0, 36:37, 38:15, 40:22, 42:43} },
+      { type: 'waist', model: "Cargo Shorts", avgPrice: "$15-$20", overall: 28, sizes: {28:14, 29:16, 30:25, 31:22, 32:37, 33:30, 34:45, 35:20, 36:32, 38:24, 40:20, 42:21} },
+      { type: 'waist', model: "Carrier Cargo Shorts", avgPrice: "$15-$20", overall: 18, sizes: {28:0, 29:0, 30:14, 31:0, 32:19, 33:20, 34:36, 35:0, 36:8, 38:9, 40:20, 42:14} },
+      { type: 'waist', model: "Commuter Pro Pants", avgPrice: "$25-$30", overall: 13, sizes: {28:0, 29:0, 30:25, 31:50, 32:17, 33:40, 34:0, 35:0, 36:14, 38:0, 40:0, 42:0} },
+      { type: 'waist', model: "Jeans 501 XX", avgPrice: "$40-$45", overall: 24, sizes: {28:29, 29:32, 30:36, 31:24, 32:31, 33:25, 34:29, 35:39, 36:21, 38:20, 40:16, 42:14} },
+      { type: 'waist', model: "Selvedge Jeans", avgPrice: "$70-$75", overall: 33, sizes: {28:26, 29:19, 30:24, 31:33, 32:42, 33:41, 34:55, 35:52, 36:42, 38:39, 40:17, 42:20} },
+      { type: 'waist', model: "SilverTab Baggy", avgPrice: "$45-$65", overall: 85, sizes: {28:45, 29:50, 30:80, 31:90, 32:115, 33:110, 34:105, 35:70, 36:95, 38:85, 40:75, 42:65} },
+      { type: 'waist', model: "SilverTab Bootcut", avgPrice: "$30-$35", overall: 37, sizes: {28:0, 29:0, 30:50, 31:75, 32:60, 33:80, 34:44, 35:0, 36:20, 38:6, 40:0, 42:0} },
+      { type: 'waist', model: "SilverTab Loose", avgPrice: "$30-$35", overall: 20, sizes: {28:0, 29:55, 30:43, 31:17, 32:36, 33:19, 34:28, 35:0, 36:25, 38:11, 40:14, 42:50} },
+      { type: 'waist', model: "XX Chino Pants", avgPrice: "$20-$25", overall: 49, sizes: {28:56, 29:24, 30:32, 31:30, 32:54, 33:47, 34:52, 35:20, 36:63, 38:57, 40:47, 42:40} },
+      { type: 'waist', model: "XX Chino Shorts", avgPrice: "$15-$20", overall: 44, sizes: {28:0, 29:17, 30:10, 31:33, 32:73, 33:117, 34:142, 35:0, 36:72, 38:37, 40:16, 42:0} },
+      { type: 'letter', model: "Denim Button Shirt", avgPrice: "$25-$30", overall: 35, sizes: {'XS':0, 'S':26, 'M':34, 'L':38, 'XL':36, '2XL':40, '3XL':59} },
+      { type: 'letter', model: "Pearl Snap Button Shirt", avgPrice: "$20-$25", overall: 23, sizes: {'XS':0, 'S':20, 'M':27, 'L':28, 'XL':22, '2XL':21, '3XL':48} }
+    ],
+    "Vintage Levi's": [
+      { type: 'waist', model: "501 (Made in USA 90s)", avgPrice: "$60-$120", overall: 88, sizes: {28:50, 29:60, 30:95, 31:105, 32:125, 33:115, 34:110, 35:75, 36:85, 38:65, 40:55, 42:45} },
+      { type: 'waist', model: "501 Big E (Pre-1971)", avgPrice: "$500-$2000+", overall: 150, sizes: {28:120, 29:130, 30:160, 31:170, 32:190, 33:180, 34:160, 35:140, 36:130, 38:110, 40:90, 42:80} },
+      { type: 'waist', model: "505 Orange Tab", avgPrice: "$45-$85", overall: 75, sizes: {28:40, 29:45, 30:65, 31:75, 32:95, 33:90, 34:85, 35:60, 36:70, 38:55, 40:45, 42:35} },
+      { type: 'waist', model: "517 Orange Tab Bootcut", avgPrice: "$60-$110", overall: 92, sizes: {28:55, 29:65, 30:90, 31:100, 32:130, 33:120, 34:110, 35:80, 36:95, 38:75, 40:60, 42:50} },
+      { type: 'waist', model: "550 Orange/Black Tab", avgPrice: "$40-$75", overall: 82, sizes: {28:45, 29:50, 30:75, 31:85, 32:105, 33:100, 34:95, 35:65, 36:80, 38:70, 40:60, 42:55} }
+    ],
+    "Carhartt": [
+      { type: 'waist', model: "B01 Double Front Dungaree", avgPrice: "$45-$65", overall: 115, sizes: {28:45, 29:50, 30:85, 31:95, 32:135, 33:125, 34:145, 35:100, 36:155, 38:130, 40:110, 42:95} },
+      { type: 'waist', model: "B11 Washed Duck Carpenter", avgPrice: "$30-$45", overall: 85, sizes: {28:30, 29:35, 30:60, 31:70, 32:95, 33:90, 34:110, 35:75, 36:120, 38:100, 40:85, 42:75} },
+      { type: 'waist', model: "B136 Double Front Washed", avgPrice: "$40-$60", overall: 105, sizes: {28:40, 29:45, 30:75, 31:85, 32:125, 33:115, 34:135, 35:90, 36:140, 38:120, 40:100, 42:85} },
+      { type: 'waist', model: "Vintage Unlined Bib Overalls", avgPrice: "$50-$90", overall: 95, sizes: {28:35, 29:40, 30:65, 31:75, 32:105, 33:100, 34:120, 35:85, 36:130, 38:115, 40:95, 42:80} },
+      { type: 'waist', model: "WIP Double Knee Pant", avgPrice: "$80-$130", overall: 140, sizes: {28:110, 29:120, 30:165, 31:175, 32:195, 33:185, 34:170, 35:130, 36:140, 38:100, 40:70, 42:50} },
+      { type: 'letter', model: "Detroit Jacket (J97)", avgPrice: "$150-$250", overall: 180, sizes: {'XS':90, 'S':120, 'M':180, 'L':210, 'XL':200, '2XL':150, '3XL':110} }
+    ],
+    "Wrangler": [
+      { type: 'waist', model: "13MWZ Cowboy Cut", avgPrice: "$18-$28", overall: 48, sizes: {28:15, 29:20, 30:35, 31:40, 32:55, 33:50, 34:65, 35:45, 36:70, 38:60, 40:50, 42:45} },
+      { type: 'waist', model: "936 Slim Cowboy Cut", avgPrice: "$25-$35", overall: 62, sizes: {28:25, 29:30, 30:50, 31:55, 32:75, 33:70, 34:80, 35:55, 36:85, 38:70, 40:55, 42:45} },
+      { type: 'waist', model: "Retro Slim Bootcut", avgPrice: "$30-$45", overall: 75, sizes: {28:35, 29:40, 30:60, 31:65, 32:90, 33:85, 34:95, 35:70, 36:100, 38:80, 40:65, 42:55} },
+      { type: 'waist', model: "RIGGS Workwear Ranger", avgPrice: "$25-$40", overall: 68, sizes: {28:20, 29:25, 30:45, 31:50, 32:70, 33:65, 34:85, 35:60, 36:95, 38:85, 40:75, 42:65} },
+      { type: 'letter', model: "Vintage Pearl Snap Shirt", avgPrice: "$25-$45", overall: 82, sizes: {'XS':20, 'S':40, 'M':85, 'L':100, 'XL':95, '2XL':80, '3XL':60} }
+    ],
+    "True Religion": [
+      { type: 'waist', model: "Ricky Super T", avgPrice: "$45-$75", overall: 58, sizes: {28:35, 29:40, 30:55, 31:60, 32:75, 33:70, 34:80, 35:50, 36:65, 38:55, 40:45, 42:35} },
+      { type: 'waist', model: "Billy Bootcut", avgPrice: "$35-$60", overall: 48, sizes: {28:25, 29:30, 30:45, 31:50, 32:65, 33:60, 34:70, 35:40, 36:55, 38:45, 40:35, 42:25} },
+      { type: 'waist', model: "Rocco Skinny", avgPrice: "$30-$50", overall: 42, sizes: {28:35, 29:40, 30:50, 31:55, 32:60, 33:55, 34:45, 35:30, 36:35, 38:25, 40:15, 42:10} },
+      { type: 'waist', model: "Geno Slim", avgPrice: "$35-$55", overall: 45, sizes: {28:30, 29:35, 30:48, 31:52, 32:62, 33:58, 34:55, 35:35, 36:40, 38:30, 40:20, 42:15} }
+    ],
+    "Arc'teryx": [
+      { type: 'waist', model: "Gamma LT Pant", avgPrice: "$100-$150", overall: 145, sizes: {28:110, 29:115, 30:150, 31:160, 32:185, 33:175, 34:165, 35:125, 36:135, 38:115, 40:85, 42:65} },
+      { type: 'waist', model: "Cronin Pant", avgPrice: "$80-$120", overall: 115, sizes: {28:80, 29:85, 30:120, 31:130, 32:150, 33:140, 34:135, 35:100, 36:115, 38:95, 40:70, 42:50} },
+      { type: 'waist', model: "Lefroy Pant", avgPrice: "$70-$100", overall: 105, sizes: {28:75, 29:80, 30:110, 31:115, 32:135, 33:125, 34:120, 35:90, 36:100, 38:85, 40:60, 42:45} },
+      { type: 'letter', model: "Atom LT Hoody", avgPrice: "$120-$180", overall: 160, sizes: {'XS':120, 'S':150, 'M':180, 'L':190, 'XL':175, '2XL':140, '3XL':110} }
+    ],
+    "Lululemon": [
+      { type: 'waist', model: "ABC Classic Fit Pant", avgPrice: "$50-$75", overall: 125, sizes: {28:90, 29:95, 30:135, 31:145, 32:165, 33:155, 34:150, 35:110, 36:125, 38:105, 40:80, 42:60} },
+      { type: 'waist', model: "Commission Slim Pant", avgPrice: "$45-$70", overall: 110, sizes: {28:85, 29:90, 30:125, 31:135, 32:150, 33:140, 34:130, 35:95, 36:105, 38:85, 40:60, 42:45} },
+      { type: 'waist', model: "Pace Breaker Short", avgPrice: "$35-$50", overall: 140, sizes: {28:110, 29:115, 30:155, 31:165, 32:180, 33:170, 34:160, 35:120, 36:135, 38:115, 40:90, 42:70} },
+      { type: 'waist', model: "Surge Jogger", avgPrice: "$55-$80", overall: 135, sizes: {28:105, 29:110, 30:145, 31:155, 32:175, 33:165, 34:155, 35:115, 36:130, 38:110, 40:85, 42:65} },
+      { type: 'letter', model: "Metal Vent Tech Tee", avgPrice: "$30-$45", overall: 115, sizes: {'XS':85, 'S':110, 'M':135, 'L':145, 'XL':130, '2XL':105, '3XL':80} }
+    ],
+    "Patagonia": [
+      { type: 'waist', model: "Stand Up Shorts", avgPrice: "$35-$55", overall: 130, sizes: {28:95, 29:100, 30:140, 31:150, 32:170, 33:160, 34:155, 35:115, 36:130, 38:110, 40:85, 42:70} },
+      { type: 'waist', model: "Baggies (5\")", avgPrice: "$30-$45", overall: 160, sizes: {28:130, 29:135, 30:175, 31:185, 32:200, 33:190, 34:185, 35:140, 36:150, 38:130, 40:105, 42:85} },
+      { type: 'waist', model: "Quandary Pant", avgPrice: "$40-$60", overall: 95, sizes: {28:65, 29:70, 30:100, 31:110, 32:125, 33:115, 34:110, 35:80, 36:90, 38:75, 40:55, 42:45} },
+      { type: 'waist', model: "Iron Forge Hemp Canvas", avgPrice: "$50-$75", overall: 110, sizes: {28:60, 29:65, 30:105, 31:115, 32:140, 33:130, 34:145, 35:100, 36:135, 38:115, 40:95, 42:80} },
+      { type: 'letter', model: "Better Sweater 1/4 Zip", avgPrice: "$45-$65", overall: 125, sizes: {'XS':80, 'S':115, 'M':145, 'L':155, 'XL':140, '2XL':110, '3XL':90} }
+    ],
+    "Lee": [
+      { type: 'waist', model: "Regular Fit Jeans", avgPrice: "$15-$20", overall: 25, sizes: {28:10, 29:15, 30:20, 31:25, 32:30, 33:28, 34:35, 35:20, 36:40, 38:35, 40:30, 42:25} },
+      { type: 'waist', model: "Carpenter Jeans", avgPrice: "$20-$30", overall: 40, sizes: {28:20, 29:25, 30:45, 31:50, 32:60, 33:55, 34:65, 35:40, 36:75, 38:65, 40:55, 42:50} }
+    ],
+    "Dockers": [
+      { type: 'waist', model: "D3 Classic Fit Khakis", avgPrice: "$15-$25", overall: 20, sizes: {28:5, 29:10, 30:20, 31:25, 32:30, 33:28, 34:35, 35:20, 36:40, 38:35, 40:30, 42:25} },
+      { type: 'waist', model: "Alpha Khaki Slim", avgPrice: "$20-$30", overall: 35, sizes: {28:25, 29:30, 30:40, 31:45, 32:55, 33:50, 34:45, 35:30, 36:35, 38:25, 40:20, 42:15} }
+    ],
+    "Polo Ralph Lauren": [
+      { type: 'letter', model: "Classic Fit Polo Shirt", avgPrice: "$20-$35", overall: 45, sizes: {'XS':20, 'S':35, 'M':50, 'L':55, 'XL':65, '2XL':55, '3XL':40} },
+      { type: 'letter', model: "Blake Button Down", avgPrice: "$25-$40", overall: 55, sizes: {'XS':15, 'S':30, 'M':55, 'L':65, 'XL':75, '2XL':80, '3XL':60} },
+      { type: 'waist', model: "Classic Chino Shorts", avgPrice: "$20-$30", overall: 38, sizes: {28:20, 29:25, 30:45, 31:50, 32:60, 33:55, 34:65, 35:40, 36:50, 38:45, 40:35, 42:25} }
+    ],
+    "Brooks Brothers": [
+      { type: 'letter', model: "1818 Dress Shirt", avgPrice: "$25-$45", overall: 42, sizes: {'XS':10, 'S':25, 'M':45, 'L':55, 'XL':60, '2XL':50, '3XL':35} },
+      { type: 'letter', model: "Merino Wool V-Neck", avgPrice: "$30-$50", overall: 35, sizes: {'XS':15, 'S':20, 'M':40, 'L':45, 'XL':50, '2XL':35, '3XL':20} }
+    ],
+    "Tommy Bahama": [
+      { type: 'letter', model: "Silk Camp Shirt", avgPrice: "$30-$50", overall: 65, sizes: {'XS':10, 'S':30, 'M':60, 'L':75, 'XL':85, '2XL':95, '3XL':70} },
+      { type: 'waist', model: "Relaxed Linen Pants", avgPrice: "$35-$55", overall: 70, sizes: {28:15, 29:20, 30:50, 31:60, 32:80, 33:75, 34:95, 35:60, 36:110, 38:90, 40:85, 42:75} }
+    ],
+    "Dickies": [
+      { type: 'waist', model: "874 Original Work Pant", avgPrice: "$20-$30", overall: 85, sizes: {28:50, 29:55, 30:75, 31:80, 32:105, 33:95, 34:110, 35:80, 36:120, 38:100, 40:90, 42:85} },
+      { type: 'waist', model: "Double Knee Work Pant", avgPrice: "$25-$35", overall: 95, sizes: {28:60, 29:65, 30:85, 31:90, 32:115, 33:105, 34:125, 35:90, 36:135, 38:110, 40:95, 42:90} },
+      { type: 'letter', model: "Eisenhower Jacket", avgPrice: "$40-$60", overall: 110, sizes: {'XS':60, 'S':85, 'M':115, 'L':130, 'XL':125, '2XL':105, '3XL':80} }
+    ],
+    "The North Face": [
+      { type: 'waist', model: "Paramount Trail Pants", avgPrice: "$25-$40", overall: 65, sizes: {28:40, 29:45, 30:60, 31:65, 32:85, 33:80, 34:75, 35:55, 36:80, 38:65, 40:55, 42:45} },
+      { type: 'letter', model: "Nuptse 700 Down Jacket", avgPrice: "$150-$220", overall: 185, sizes: {'XS':130, 'S':165, 'M':210, 'L':225, 'XL':215, '2XL':180, '3XL':145} },
+      { type: 'letter', model: "Denali Fleece Jacket", avgPrice: "$40-$65", overall: 95, sizes: {'XS':65, 'S':85, 'M':110, 'L':120, 'XL':115, '2XL':95, '3XL':75} }
+    ],
+    "Columbia": [
+      { type: 'waist', model: "Silver Ridge Cargo", avgPrice: "$20-$30", overall: 55, sizes: {28:30, 29:35, 30:50, 31:55, 32:70, 33:65, 34:60, 35:45, 36:65, 38:55, 40:50, 42:40} },
+      { type: 'letter', model: "PFG Bahama II Shirt", avgPrice: "$18-$25", overall: 75, sizes: {'XS':40, 'S':60, 'M':85, 'L':95, 'XL':90, '2XL':75, '3XL':65} },
+      { type: 'letter', model: "Steens Mountain Fleece", avgPrice: "$15-$25", overall: 45, sizes: {'XS':25, 'S':35, 'M':50, 'L':55, 'XL':50, '2XL':40, '3XL':30} }
+    ],
+    "Nike": [
+      { type: 'waist', model: "Dri-FIT Challenger Shorts", avgPrice: "$15-$25", overall: 110, sizes: {28:80, 29:85, 30:115, 31:120, 32:135, 33:125, 34:120, 35:95, 36:110, 38:90, 40:75, 42:60} },
+      { type: 'waist', model: "Club Fleece Joggers", avgPrice: "$25-$35", overall: 140, sizes: {28:105, 29:110, 30:150, 31:155, 32:175, 33:165, 34:155, 35:120, 36:140, 38:115, 40:95, 42:80} },
+      { type: 'letter', model: "Tech Fleece Full-Zip", avgPrice: "$60-$90", overall: 165, sizes: {'XS':120, 'S':155, 'M':190, 'L':200, 'XL':185, '2XL':145, '3XL':115} }
+    ],
+    "Under Armour": [
+      { type: 'waist', model: "Golf Tech Pants", avgPrice: "$20-$35", overall: 75, sizes: {28:45, 29:50, 30:70, 31:75, 32:95, 33:85, 34:80, 35:60, 36:85, 38:70, 40:60, 42:50} },
+      { type: 'letter', model: "Tech 2.0 Short Sleeve", avgPrice: "$12-$18", overall: 85, sizes: {'XS':50, 'S':70, 'M':95, 'L':105, 'XL':100, '2XL':80, '3XL':65} }
+    ]
+  };
+
+  const sizeColsWaist = [28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 40, 42];
+  const sizeColsLetter = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+  
+  let currentBrand = "Modern Levi's";
+  let sortConfig = { key: 'model', desc: false };
+
+  // --- LOGIC: RENDER SIDEBAR ---
+  function renderSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.innerHTML = '';
+    
+    Object.keys(database).forEach(brand => {
+      const count = database[brand].length;
+      const btn = document.createElement('button');
+      btn.className = `brand-btn ${brand === currentBrand ? 'active' : ''}`;
+      btn.innerHTML = `<span>${brand}</span> <span class="brand-count">${count}</span>`;
+      btn.onclick = () => {
+        currentBrand = brand;
+        document.getElementById('searchBar').value = ''; 
+        renderSidebar(); 
+        renderTable();
+      };
+      sidebar.appendChild(btn);
+    });
+  }
+
+  // --- LOGIC: HELPER FOR COLOR CODING ---
+  function getStrClass(val) {
+    if (val === null || val === undefined || val === '') return 'str-null';
+    if (val >= 50) return 'str-hot';
+    if (val >= 30) return 'str-warm';
+    return 'str-cold';
+  }
+
+  function formatStr(val) {
+    return (val === null || val === undefined || val === '') ? '-' : `${val}%`;
+  }
+
+  // --- LOGIC: SORTING ---
+  window.handleSort = function(key) {
+    if (sortConfig.key === key) {
+      sortConfig.desc = !sortConfig.desc; 
+    } else {
+      sortConfig.key = key;
+      sortConfig.desc = true; 
+    }
+    renderTable();
+  }
+
+  // --- LOGIC: RENDER TABLE ---
+  window.renderTable = function() {
+    const tbody = document.getElementById('tableBody');
+    const searchQuery = document.getElementById('searchBar').value.toLowerCase();
+    const minStr = parseInt(document.getElementById('minStrFilter').value) || 0;
+    
+    tbody.innerHTML = '';
+
+    let data = [...database[currentBrand]];
+
+    // Filter Logic
+    data = data.filter(item => {
+      const matchesSearch = item.model.toLowerCase().includes(searchQuery);
+      const matchesStr = item.overall >= minStr;
+      return matchesSearch && matchesStr;
+    });
+
+    // Sort Logic
+    data.sort((a, b) => {
+      let valA, valB;
+      
+      if (sortConfig.key === 'model') {
+        valA = a.model.toLowerCase();
+        valB = b.model.toLowerCase();
+      } else if (sortConfig.key === 'avgPrice') {
+        valA = parseInt(a.avgPrice.replace(/[^0-9]/g, '')) || 0;
+        valB = parseInt(b.avgPrice.replace(/[^0-9]/g, '')) || 0;
+      } else if (sortConfig.key === 'overall') {
+        valA = a.overall;
+        valB = b.overall;
+      } else {
+        valA = a.sizes[sortConfig.key] || 0;
+        valB = b.sizes[sortConfig.key] || 0;
+      }
+
+      if (valA < valB) return sortConfig.desc ? 1 : -1;
+      if (valA > valB) return sortConfig.desc ? -1 : 1;
+      return 0;
+    });
+
+    // Split data by type for rendering
+    const waistData = data.filter(d => d.type === 'waist' || !d.type);
+    const letterData = data.filter(d => d.type === 'letter');
+
+    let html = '';
+
+    // Render Waist Sizes
+    if (waistData.length > 0) {
+      waistData.forEach(item => {
+        let rowHtml = `
+          <td style="text-align:left; padding-left:24px;">${item.model}</td>
+          <td>${item.avgPrice}</td>
+          <td class="col-overall ${getStrClass(item.overall)}">${formatStr(item.overall)}</td>
+        `;
+        sizeColsWaist.forEach(size => {
+          const val = item.sizes[size];
+          rowHtml += `<td class="${getStrClass(val)}">${formatStr(val)}</td>`;
+        });
+        html += `<tr>${rowHtml}</tr>`;
+      });
+    }
+
+    // Render Letter Sizes (with sub-header)
+    if (letterData.length > 0) {
+      html += `
+        <tr class="sub-header">
+          <th>Letter Size Models</th>
+          <th>AVG $</th>
+          <th class="col-overall">Overall STR</th>
+          <th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th><th>2XL</th><th>3XL</th>
+          <th colspan="5"></th>
+        </tr>
+      `;
+      letterData.forEach(item => {
+        let rowHtml = `
+          <td style="text-align:left; padding-left:24px;">${item.model}</td>
+          <td>${item.avgPrice}</td>
+          <td class="col-overall ${getStrClass(item.overall)}">${formatStr(item.overall)}</td>
+        `;
+        sizeColsLetter.forEach(size => {
+          const val = item.sizes[size];
+          rowHtml += `<td class="${getStrClass(val)}">${formatStr(val)}</td>`;
+        });
+        rowHtml += `<td colspan="5"></td>`;
+        html += `<tr>${rowHtml}</tr>`;
+      });
+    }
+
+    if (html === '') {
+      html = `<tr><td colspan="${3 + sizeColsWaist.length}" style="padding: 40px; color: var(--text-muted);">No models match your criteria.</td></tr>`;
+    }
+
+    tbody.innerHTML = html;
+  }
+
+  // Init
+  renderSidebar();
+  renderTable();
+
+</script>
+</body>
+</html>
