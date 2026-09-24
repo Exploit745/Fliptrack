@@ -146,7 +146,6 @@
   .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid var(--glass-border); text-transform: uppercase; letter-spacing: 0.05em; backdrop-filter: blur(4px); }
   .status-purchased { color: var(--warning); background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
   .status-listed { color: var(--accent-blue); background: rgba(96, 165, 250, 0.1); border-color: rgba(96, 165, 250, 0.2); }
-  .status-sold { color: var(--success); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.2); }
   .status-hold { color: var(--accent-purple); background: rgba(167, 139, 250, 0.1); border-color: rgba(167, 139, 250, 0.2); }
   .status-dead { color: var(--danger); background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.2); }
   
@@ -248,6 +247,7 @@
       </div>
       <button onclick="window.location.href='csheet.html'">📊 CSheet</button>
       <button onclick="window.location.href='tools.html'" style="color: var(--accent-blue);">🛠️ Utilities</button>
+      <button onclick="openSoldModal()" style="color: var(--success);">📦 Sold Archive</button>
       <button onclick="openBoloModal()" style="color: var(--warning);">👀 BOLOs</button>
       <button onclick="openTaxModal()" style="color: var(--success);">📄 Tax Prep</button>
       <button onclick="openAuditModal()" style="color: var(--text-muted);">📜 Logs</button>
@@ -304,10 +304,9 @@
     <div class="search-filters">
       <input type="text" id="searchInput" placeholder="Search inventory (Press '/')..." oninput="renderTable()">
       <select id="statusFilter" onchange="renderTable()">
-        <option value="All">All Statuses</option>
+        <option value="All">All Active Statuses</option>
         <option value="Purchased">Purchased</option>
         <option value="Listed">Listed</option>
-        <option value="Sold">Sold</option>
         <option value="Hold">Hold</option>
         <option value="Dead">Dead</option>
       </select>
@@ -371,8 +370,8 @@
   </div>
 </div>
 
-<!-- ITEM MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeOnOutsideClick(event, 'modalOverlay')">
+<!-- ITEM MODAL (Set z-index higher so it sits above Sold Archive if needed) -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOutsideClick(event, 'modalOverlay')" style="z-index: 1050;">
   <div class="modal">
     <div class="modal-header">
       <h2 id="modalTitle">Add Item</h2>
@@ -445,6 +444,33 @@
         <button type="submit" class="primary" style="padding: 10px 24px;">Save Item</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- SOLD ARCHIVE MODAL -->
+<div class="modal-overlay" id="soldOverlay" onclick="closeOnOutsideClick(event, 'soldOverlay')">
+  <div class="modal" style="width: min(900px, 100%);">
+    <div class="modal-header">
+      <h2>📦 Sold Archive</h2>
+      <button class="close-btn" onclick="closeSoldModal()">&times;</button>
+    </div>
+    <div class="table-wrap" style="margin-bottom: 0; box-shadow: none; border: 1px solid var(--glass-border);">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Item Identity</th>
+            <th>Cost</th>
+            <th>Act. Sale</th>
+            <th class="hide-mobile">Fees/Ship</th>
+            <th>Net & ROI</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="soldTableBody">
+          <!-- Sold items inject here -->
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -548,7 +574,7 @@
     if(e.target.matches('input, textarea, select')) return;
     if(e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
     if(e.key === '/') { e.preventDefault(); document.getElementById('searchInput').focus(); }
-    if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); }
+    if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); closeSoldModal(); }
   });
 
   window.handlePasswordUnlock = function(e) { e.preventDefault(); if (document.getElementById('masterPasswordInput').value === MASTER_PASSWORD) { localStorage.setItem('fliptrack_unlocked', 'true'); document.getElementById('passOverlay').classList.add('hidden'); loadData(); } else { alert("Incorrect password."); document.getElementById('masterPasswordInput').value = ''; } };
@@ -557,7 +583,7 @@
 
   window.updateGoal = function() { const currentGoal = localStorage.getItem('fliptrack_goal') || 1000; const newGoal = prompt("Set your new monthly net profit goal ($):", currentGoal); if(newGoal && !isNaN(newGoal)) { localStorage.setItem('fliptrack_goal', newGoal); document.getElementById('goalTargetTxt').innerText = newGoal; renderTable(); } };
 
-  async function loadData() { try { const [itemSnap, expSnap] = await Promise.all([ getDocs(collection(db, "fliptrack_items")), getDocs(collection(db, "fliptrack_expenses")) ]); inventory = []; itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() })); expenseData = []; expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() })); renderTable(); renderExpenses(); } catch (error) { console.error("Error loading data: ", error); } }
+  async function loadData() { try { const [itemSnap, expSnap] = await Promise.all([ getDocs(collection(db, "fliptrack_items")), getDocs(collection(db, "fliptrack_expenses")) ]); inventory = []; itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() })); expenseData = []; expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() })); renderTable(); renderExpenses(); if(window.renderSoldTable) window.renderSoldTable(); } catch (error) { console.error("Error loading data: ", error); } }
 
   async function logAudit(actionString) { try { await addDoc(collection(db, "fliptrack_audit"), { action: actionString, date: new Date().toISOString() }); } catch (e) { console.error(e); } }
 
@@ -576,6 +602,45 @@
   window.handleAddExpense = async function(e) { e.preventDefault(); const desc = document.getElementById('expDesc').value.trim(); const amount = parseFloat(document.getElementById('expAmount').value) || 0; const id = crypto.randomUUID(); try { await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString() }); logAudit(`Logged expense: ${desc} ($${amount.toFixed(2)})`); document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; await loadData(); } catch (error) { alert("Failed to add expense."); } };
   window.deleteExpense = async function(id) { if(confirm("Delete this expense?")) { await deleteDoc(doc(db, "fliptrack_expenses", id)); await loadData(); } };
   function renderExpenses() { const list = document.getElementById('expenseListBody'); list.innerHTML = ''; let totalExp = 0; expenseData.forEach(exp => { totalExp += exp.amount; const dateStr = new Date(exp.date).toLocaleDateString(); list.innerHTML += `<div class="expense-item"><div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--text-muted); font-size:11px; margin-left:8px;">${dateStr}</span></div><div style="display:flex; align-items:center; gap:10px;"><span style="color:var(--danger); font-weight:bold;">-$${exp.amount.toFixed(2)}</span><button class="danger" onclick="deleteExpense('${exp.id}')">X</button></div></div>`; }); if(expenseData.length === 0) list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">No expenses logged yet.</div>`; document.getElementById('stat-expenses').innerText = `-$${totalExp.toFixed(2)}`; return totalExp; }
+
+  // --- SOLD ARCHIVE LOGIC ---
+  window.openSoldModal = function() {
+    document.getElementById('soldOverlay').classList.add('active');
+    renderSoldTable();
+  };
+  window.closeSoldModal = () => document.getElementById('soldOverlay').classList.remove('active');
+
+  window.renderSoldTable = function() {
+    const tbody = document.getElementById('soldTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const soldItems = inventory.filter(i => i.status === 'Sold');
+
+    if (soldItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">No sold items archived yet.</td></tr>`;
+      return;
+    }
+
+    soldItems.forEach(item => {
+      const profit = calculateProfit(item);
+      const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+      const cost = parseFloat(item.cost) || 0;
+      const roi = cost > 0 ? Math.round((profit / cost) * 100) : 0;
+      const roiDisplay = roi > 0 ? `<div class="roi-tag">${roi}% ROI</div>` : (cost === 0 && profit > 0 ? `<div class="roi-tag" style="color:var(--accent-blue)">100%+ ROI</div>` : '');
+      const feesDisplay = (parseFloat(item.fees) || 0) + (parseFloat(item.shipping) || 0);
+
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="item-main">${escapeHTML(item.name)}</span><span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span></td>
+          <td>${formatMoney(item.cost)}</td>
+          <td>${formatMoney(item.actualSale)}</td>
+          <td class="hide-mobile" style="color:var(--text-muted);">${formatMoney(feesDisplay)}</td>
+          <td class="profit-col ${pClass}">${profit >= 0 ? '+' : ''}${formatMoney(profit)} ${roiDisplay}</td>
+          <td class="action-btns"><button onclick="editItem('${item.id}')">Edit</button></td>
+        </tr>
+      `;
+    });
+  };
 
   function updateChart() { const ctx = document.getElementById('profitChart').getContext('2d'); const monthlyData = {}; inventory.forEach(item => { if(item.status === 'Sold' && item.date) { const month = item.date.substring(0, 7); monthlyData[month] = (monthlyData[month] || 0) + calculateProfit(item); } }); const sortedMonths = Object.keys(monthlyData).sort(); const labels = sortedMonths.map(m => new Date(m + "-02").toLocaleDateString('en-US', { month: 'short', year: '2-digit' })); const dataPoints = sortedMonths.map(m => monthlyData[m]); if(profitChartInstance) profitChartInstance.destroy(); profitChartInstance = new Chart(ctx, { type: 'bar', data: { labels: labels.length ? labels : ['No Data'], datasets: [{ label: 'Realized Profit', data: dataPoints.length ? dataPoints : [0], backgroundColor: '#60A5FA', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Profit by Month', color: '#94A3B8', font: { size: 13, family: 'Inter' } } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94A3B8', callback: (val) => '$' + val } }, x: { grid: { display: false }, ticks: { color: '#94A3B8' } } } } }); }
 
@@ -596,8 +661,16 @@
 
   function renderTable() {
     const tbody = document.getElementById('tableBody'); const search = document.getElementById('searchInput').value.toLowerCase(); const statusFilter = document.getElementById('statusFilter').value; tbody.innerHTML = ''; let invested = 0, expectedRevenue = 0, grossProfit = 0, itemsSold = 0;
+    
     inventory.forEach(item => {
-      invested += (parseFloat(item.cost) || 0); if (item.status !== 'Sold' && item.status !== 'Dead') expectedRevenue += (parseFloat(item.expectedSale) || 0); if (item.status === 'Sold') { itemsSold++; grossProfit += calculateProfit(item); }
+      // Calculate globals first so stats stay accurate regardless of table visibility
+      invested += (parseFloat(item.cost) || 0); 
+      if (item.status !== 'Sold' && item.status !== 'Dead') expectedRevenue += (parseFloat(item.expectedSale) || 0); 
+      if (item.status === 'Sold') { itemsSold++; grossProfit += calculateProfit(item); }
+      
+      // Skip rendering 'Sold' items in the main dashboard table to reduce clutter
+      if (item.status === 'Sold') return;
+
       if (`${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase().includes(search) && (statusFilter === 'All' || item.status === statusFilter)) {
         const profit = calculateProfit(item); const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative'; const cost = parseFloat(item.cost) || 0; const roi = cost > 0 ? Math.round((profit / cost) * 100) : 0; const roiDisplay = roi > 0 ? `<div class="roi-tag">${roi}% ROI</div>` : (cost === 0 && profit > 0 ? `<div class="roi-tag" style="color:var(--accent-blue)">100%+ ROI</div>` : ''); let tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick'); const isChecked = selectedItems.has(item.id) ? 'checked' : ''; const feesDisplay = (parseFloat(item.fees) || 0) + (parseFloat(item.shipping) || 0);
         tbody.innerHTML += `
@@ -616,10 +689,13 @@
         `;
       }
     });
-    if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="10" class="empty">No items found.</td></tr>`;
+    
+    if (tbody.innerHTML === '') tbody.innerHTML = `<tr><td colspan="10" class="empty">No active items found.</td></tr>`;
+    
     const totalExp = expenseData.reduce((acc, curr) => acc + curr.amount, 0); const trueNet = grossProfit - totalExp;
     document.getElementById('stat-invested').innerText = formatMoney(invested); document.getElementById('stat-expected').innerText = formatMoney(expectedRevenue); document.getElementById('stat-gross').innerText = (grossProfit >= 0 ? '+' : '') + formatMoney(grossProfit); document.getElementById('stat-gross').className = `value ${grossProfit >= 0 ? 'profit-positive' : 'profit-negative'}`; document.getElementById('stat-net').innerText = (trueNet >= 0 ? '+' : '') + formatMoney(trueNet); document.getElementById('stat-net').className = `value ${trueNet >= 0 ? 'profit-positive' : 'profit-negative'}`;
     const goalVal = parseFloat(localStorage.getItem('fliptrack_goal') || 1000); const netClamped = Math.max(0, trueNet); let percent = (netClamped / goalVal) * 100; if(percent > 100) percent = 100; document.getElementById('goalCurrentTxt').innerText = formatMoney(netClamped); document.getElementById('goalProgressBar').style.width = percent + '%'; document.getElementById('goalPercentTxt').innerText = `${percent.toFixed(1)}% completed`;
+    
     updateBulkToolbar(); updateChart();
   }
 
