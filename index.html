@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FlipTrack | Inventory Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Barcode Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
 <!-- Obsidian Glass Typography -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -137,6 +139,8 @@
   .table td { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; white-space: nowrap; }
   .table tr:hover { background: var(--glass-hover); }
   .table tr.selected { background: rgba(96, 165, 250, 0.08); }
+  .table tr.death-pile { background: rgba(248, 113, 113, 0.05); border-left: 2px solid var(--danger); }
+  .table tr.death-pile:hover { background: rgba(248, 113, 113, 0.1); }
   .table td.empty { text-align: center; color: var(--text-muted); padding: 32px; }
   .item-main { font-weight: 600; color: var(--text-main); display: block; font-size: 14px; }
   .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block; }
@@ -381,7 +385,11 @@
       <input type="hidden" id="itemId">
       <div class="form-grid">
         <div class="form-group full">
-          <label>Item Name *</label>
+          <label style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <span>Item Name *</span>
+            <button type="button" onclick="startScanner()" style="padding: 4px 10px; font-size: 11px; font-weight: 700; background: var(--accent-blue); color: #000; border: none; border-radius: 6px; cursor:pointer;">📷 Scan Barcode</button>
+          </label>
+          <div id="reader" style="display:none; width: 100%; max-width: 400px; margin: 0 auto 10px auto; border-radius: 8px; overflow: hidden; border: 1px solid var(--accent-blue);"></div>
           <input type="text" id="itemName" required placeholder="e.g. Sony Walkman">
         </div>
         <div class="form-group">
@@ -654,7 +662,6 @@
   window.deleteItem = async function(id) { if (confirm('Delete this item?')) { const it = inventory.find(i=>i.id===id); await deleteDoc(doc(db, "fliptrack_items", id)); logAudit(`Deleted item: ${it ? it.name : id}`); loadData(); } };
 
   window.closeOnOutsideClick = (e, id) => { if (e.target.id === id) document.getElementById(id).classList.remove('active'); };
-  const calculateDaysInStock = d => { if(!d) return '—'; const diff = Math.floor((new Date() - new Date(d)) / 86400000); return diff < 0 ? '0d' : `${diff}d`; };
   const calculateProfit = i => (i.status === 'Sold' ? (parseFloat(i.actualSale)||0) : (parseFloat(i.expectedSale)||0)) - (parseFloat(i.cost)||0) - (parseFloat(i.fees)||0) - (parseFloat(i.shipping)||0);
   const formatMoney = n => (n === null || n === undefined || isNaN(n) || n === '') ? '—' : '$' + parseFloat(n).toFixed(2);
   const escapeHTML = s => String(s||'').replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
@@ -663,21 +670,39 @@
     const tbody = document.getElementById('tableBody'); const search = document.getElementById('searchInput').value.toLowerCase(); const statusFilter = document.getElementById('statusFilter').value; tbody.innerHTML = ''; let invested = 0, expectedRevenue = 0, grossProfit = 0, itemsSold = 0;
     
     inventory.forEach(item => {
-      // Calculate globals first so stats stay accurate regardless of table visibility
       invested += (parseFloat(item.cost) || 0); 
       if (item.status !== 'Sold' && item.status !== 'Dead') expectedRevenue += (parseFloat(item.expectedSale) || 0); 
       if (item.status === 'Sold') { itemsSold++; grossProfit += calculateProfit(item); }
       
-      // Skip rendering 'Sold' items in the main dashboard table to reduce clutter
-      if (item.status === 'Sold') return;
+      if (item.status === 'Sold') return; // Skip sold items
 
       if (`${item.name} ${item.brand} ${item.model} ${item.notes} ${item.tier}`.toLowerCase().includes(search) && (statusFilter === 'All' || item.status === statusFilter)) {
-        const profit = calculateProfit(item); const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative'; const cost = parseFloat(item.cost) || 0; const roi = cost > 0 ? Math.round((profit / cost) * 100) : 0; const roiDisplay = roi > 0 ? `<div class="roi-tag">${roi}% ROI</div>` : (cost === 0 && profit > 0 ? `<div class="roi-tag" style="color:var(--accent-blue)">100%+ ROI</div>` : ''); let tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick'); const isChecked = selectedItems.has(item.id) ? 'checked' : ''; const feesDisplay = (parseFloat(item.fees) || 0) + (parseFloat(item.shipping) || 0);
+        const profit = calculateProfit(item); 
+        const pClass = profit >= 0 ? 'profit-positive' : 'profit-negative'; 
+        const cost = parseFloat(item.cost) || 0; 
+        const roi = cost > 0 ? Math.round((profit / cost) * 100) : 0; 
+        const roiDisplay = roi > 0 ? `<div class="roi-tag">${roi}% ROI</div>` : (cost === 0 && profit > 0 ? `<div class="roi-tag" style="color:var(--accent-blue)">100%+ ROI</div>` : ''); 
+        const tClass = item.tier === 'Long Tail' ? 'tier-long' : (item.tier === 'Project' ? 'tier-project' : 'tier-quick'); 
+        const isChecked = selectedItems.has(item.id); 
+        const feesDisplay = (parseFloat(item.fees) || 0) + (parseFloat(item.shipping) || 0);
+
+        // -- Aging Logic --
+        const diff = item.date ? Math.floor((new Date() - new Date(item.date)) / 86400000) : 0;
+        const diffDisplay = diff < 0 ? '0d' : `${diff}d`;
+        const isDeathPile = diff >= 90 && item.status !== 'Dead';
+        const rowClass = (isChecked ? 'selected ' : '') + (isDeathPile ? 'death-pile' : '');
+        const ageStyle = isDeathPile ? 'color: var(--danger); font-weight: 800;' : 'font-weight:600; color:var(--text-muted);';
+        const ageIcon = isDeathPile ? ' 🚨' : '';
+
+        // -- Comps Link --
+        const searchTerms = encodeURIComponent(`${item.brand || ''} ${item.model || ''} ${item.name || ''}`.trim());
+        const compLink = `<a href="https://www.ebay.com/sch/i.html?_nkw=${searchTerms}&LH_Sold=1&LH_Complete=1" target="_blank" title="Check eBay Sold Comps" style="text-decoration:none; margin-left:8px; font-size:12px; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'">🔍</a>`;
+
         tbody.innerHTML += `
-          <tr class="${isChecked ? 'selected' : ''}">
-            <td><input type="checkbox" class="row-checkbox" value="${item.id}" onchange="toggleRowSelection('${item.id}', this)" ${isChecked}></td>
-            <td><span class="item-main">${escapeHTML(item.name)}</span><span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span><span class="tier-tag ${tClass}">${escapeHTML(item.tier || 'Quick Flip')}</span></td>
-            <td class="hide-mobile" style="font-weight:600; color:var(--text-muted);">${calculateDaysInStock(item.date)}</td>
+          <tr class="${rowClass}">
+            <td><input type="checkbox" class="row-checkbox" value="${item.id}" onchange="toggleRowSelection('${item.id}', this)" ${isChecked ? 'checked' : ''}></td>
+            <td><span class="item-main">${escapeHTML(item.name)}${compLink}</span><span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span><span class="tier-tag ${tClass}">${escapeHTML(item.tier || 'Quick Flip')}</span></td>
+            <td class="hide-mobile" style="${ageStyle}">${diffDisplay}${ageIcon}</td>
             <td>${formatMoney(item.cost)}</td>
             <td>${formatMoney(item.expectedSale)}</td>
             <td>${item.actualSale ? formatMoney(item.actualSale) : '—'}</td>
@@ -701,12 +726,59 @@
 
   window.openModal = function() { document.getElementById('itemForm').reset(); document.getElementById('itemId').value = ''; document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10); document.getElementById('itemTier').value = 'Quick Flip'; document.getElementById('modalTitle').innerText = 'Add Item'; document.getElementById('modalOverlay').classList.add('active'); };
   window.editItem = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => { document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? ''; }); document.getElementById('modalTitle').innerText = 'Edit Item'; document.getElementById('modalOverlay').classList.add('active'); };
-  window.closeModal = () => document.getElementById('modalOverlay').classList.remove('active');
+  
+  window.closeModal = () => {
+    document.getElementById('modalOverlay').classList.remove('active');
+    if (window.scannerInstance) {
+      try { window.scannerInstance.stop().then(() => window.scannerInstance.clear()).catch(()=>{}); } catch(e){}
+    }
+    document.getElementById('reader').style.display = 'none';
+  };
   
   window.exportCSV = function() { if (inventory.length === 0) return alert('No inventory to export.'); logAudit('Exported CSV of database'); const rows = inventory.map(i => [`"${escapeHTML(i.name)}"`,`"${escapeHTML(i.brand)}"`,`"${escapeHTML(i.model)}"`,`"${escapeHTML(i.tier)}"`,`"${i.date}"`,i.cost||0,i.expectedSale||0,i.actualSale||'',i.fees||0,i.shipping||0,calculateProfit(i),i.status,`"${escapeHTML(i.notes).replace(/"/g, '""')}"`].join(',')); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([['Item,Brand,Model,Tier,Purchase Date,Cost,Expected Sale,Actual Sale,Fees,Shipping,Profit,Status,Notes', ...rows].join('\n')], { type: 'text/csv' })); link.download = 'fliptrack-inventory.csv'; link.click(); };
   window.handleCSVImport = async function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async function(evt) { const lines = evt.target.result.split('\n').filter(l => l.trim() !== ''); if(lines.length < 2) return; if(!confirm(`Import ${lines.length - 1} items?`)) { document.getElementById('csvUpload').value = ''; return; } const batch = writeBatch(db); for(let i = 1; i < lines.length; i++) { const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"\vert{}"$/g, '').trim()); if(row.length < 3) continue; const id = crypto.randomUUID(); batch.set(doc(db, "fliptrack_items", id), { name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'' }); } try { await batch.commit(); logAudit(`Bulk imported ${lines.length - 1} items from CSV.`); alert("Bulk import successful!"); document.getElementById('csvUpload').value = ''; loadData(); } catch (err) { alert("Import failed."); } }; reader.readAsText(file); };
-  
   window.copyListingTemplate = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; const template = `🔥 ${item.brand ? item.brand + ' ' : ''}${item.name}${item.model ? ' ' + item.model : ''} 🔥\n\nBrand: ${item.brand || 'N/A'}\nModel: ${item.model || 'N/A'}\nCondition / Notes: ${item.notes || 'Tested and working. Clean condition.'}\nPrice: ${item.expectedSale ? '$'+parseFloat(item.expectedSale).toFixed(2) : 'N/A'}\n\nMessage if interested!`; navigator.clipboard.writeText(template).then(() => alert(`Copied template for "${item.name}"!`)); };
+
+  // --- BARCODE SCANNER LOGIC ---
+  window.scannerInstance = null;
+  window.startScanner = function() {
+    const readerDiv = document.getElementById('reader');
+    if (readerDiv.style.display === 'block') {
+        if (window.scannerInstance) { window.scannerInstance.stop().then(() => window.scannerInstance.clear()).catch(()=>{}); }
+        readerDiv.style.display = 'none';
+        return;
+    }
+    readerDiv.style.display = 'block';
+    window.scannerInstance = new Html5Qrcode("reader");
+    window.scannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        window.scannerInstance.stop().then(() => window.scannerInstance.clear()).catch(()=>{});
+        readerDiv.style.display = 'none';
+        fetchUPCData(decodedText);
+      },
+      (err) => { /* ignore */ }
+    ).catch(err => {
+      alert("Camera access denied or unsupported: " + err);
+      readerDiv.style.display = 'none';
+    });
+  };
+
+  async function fetchUPCData(upc) {
+    document.getElementById('itemName').value = "Looking up UPC " + upc + "...";
+    try {
+      const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`);
+      const data = await res.json();
+      if(data.items && data.items.length > 0) {
+        document.getElementById('itemName').value = data.items[0].title || '';
+        document.getElementById('itemBrand').value = data.items[0].brand || '';
+        document.getElementById('itemModel').value = data.items[0].model || '';
+      } else {
+        document.getElementById('itemName').value = upc;
+      }
+    } catch(e) {
+      document.getElementById('itemName').value = upc;
+    }
+  }
 
   window.renderTable = renderTable;
 </script>
