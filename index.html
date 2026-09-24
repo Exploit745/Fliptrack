@@ -81,6 +81,8 @@
   .danger:hover { background: rgba(248, 113, 113, 0.1); border-color: var(--danger); }
   .special { color: var(--accent-purple); border-color: rgba(167, 139, 250, 0.3); }
   .special:hover { background: rgba(167, 139, 250, 0.1); border-color: var(--accent-purple); }
+  .success-btn { background: rgba(52, 211, 153, 0.15); border-color: var(--success); color: var(--success); }
+  .success-btn:hover { background: rgba(52, 211, 153, 0.25); box-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
 
   /* FLOATING ACTION BUTTON (MOBILE) */
   .fab { display: none; position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: #001115; border-radius: 50%; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,234,255,0.4); z-index: 900; cursor: pointer; border: none; font-weight: bold; padding: 0; line-height: 1; }
@@ -160,7 +162,7 @@
   .roi-tag { font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
   .action-btns button { padding: 8px 12px; font-size: 12px; margin-right: 6px; }
 
-  /* GUIDES & LISTS (BOLO, AUDIT, EXPENSE, TAX) */
+  /* GUIDES & LISTS */
   .guides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
   .guide-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
   .guide-card ul { margin: 0; padding-left: 0; list-style: none; color: var(--text-muted); font-size: 13px; }
@@ -251,6 +253,7 @@
       </div>
       <button onclick="window.location.href='csheet.html'">📊 CSheet</button>
       <button onclick="window.location.href='tools.html'" style="color: var(--accent-blue);">🛠️ Utilities</button>
+      <button onclick="openScoutModal()" style="color: var(--accent-purple); font-weight: bold;">🔍 Scout</button>
       <button onclick="openSoldModal()" style="color: var(--success);">📦 Sold Archive</button>
       <button onclick="openBoloModal()" style="color: var(--warning);">👀 BOLOs</button>
       <button onclick="openTaxModal()" style="color: var(--success);">📄 Tax Prep</button>
@@ -351,30 +354,46 @@
       </tbody>
     </table>
   </div>
+</div>
 
-  <div class="guides-grid">
-    <div class="glass-panel guide-card card">
-      <h3>🟢 Sourcing Checklist</h3>
-      <ul>
-        <li>Exact model identified via comps</li>
-        <li>Condition checked & tested</li>
-        <li>Shipping logistics evaluated</li>
-        <li>Profit margin validates time investment</li>
-      </ul>
+<!-- QUICK SCOUT MODAL -->
+<div class="modal-overlay" id="scoutOverlay" onclick="closeOnOutsideClick(event, 'scoutOverlay')" style="z-index: 1060;">
+  <div class="modal" style="width: min(600px, 100%);">
+    <div class="modal-header">
+      <h2>🔍 Quick Scout</h2>
+      <button class="close-btn" onclick="closeScoutModal()">&times;</button>
     </div>
-    <div class="glass-panel guide-card card">
-      <h3>📦 Listing Protocol</h3>
-      <ul>
-        <li>Clear, bright photos of all angles & tags</li>
-        <li>Flaws explicitly detailed in description</li>
-        <li>Pre-packaged dimensions & weight recorded</li>
-        <li>Priced competitively based on recent solds</li>
-      </ul>
+    <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">Enter item details to instantly check sold comps across multiple platforms without leaving the app.</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Brand</label>
+        <input type="text" id="scoutBrand" placeholder="e.g. Arc'teryx">
+      </div>
+      <div class="form-group full">
+        <label>Model / Name</label>
+        <input type="text" id="scoutModel" placeholder="e.g. Beta AR Jacket">
+      </div>
+      <div class="form-group">
+        <label>Size / Variant</label>
+        <input type="text" id="scoutSize" placeholder="e.g. Men's Large">
+      </div>
+      <div class="form-group">
+        <label>Extra Keywords</label>
+        <input type="text" id="scoutKeywords" placeholder="e.g. Gore-Tex Black">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;">
+      <button class="primary" onclick="scoutEbay()" style="flex: 1; min-width: 140px; justify-content: center;">Check eBay Solds</button>
+      <button class="special" onclick="scoutMercari()" style="flex: 1; min-width: 140px; justify-content: center;">Check Mercari</button>
+      <button onclick="scoutGoogle()" style="flex: 1; min-width: 140px; justify-content: center;">Google Search</button>
+    </div>
+    <div class="modal-footer" style="margin-top: 24px;">
+      <button class="success-btn" onclick="convertScoutToItem()" style="width: 100%; font-weight: bold; justify-content: center;">✔️ Looks Good, Add to FlipTrack</button>
     </div>
   </div>
 </div>
 
-<!-- ITEM MODAL (Set z-index higher so it sits above Sold Archive if needed) -->
+<!-- ITEM MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeOnOutsideClick(event, 'modalOverlay')" style="z-index: 1050;">
   <div class="modal">
     <div class="modal-header">
@@ -582,7 +601,7 @@
     if(e.target.matches('input, textarea, select')) return;
     if(e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
     if(e.key === '/') { e.preventDefault(); document.getElementById('searchInput').focus(); }
-    if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); closeSoldModal(); }
+    if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); closeSoldModal(); closeScoutModal(); }
   });
 
   window.handlePasswordUnlock = function(e) { e.preventDefault(); if (document.getElementById('masterPasswordInput').value === MASTER_PASSWORD) { localStorage.setItem('fliptrack_unlocked', 'true'); document.getElementById('passOverlay').classList.add('hidden'); loadData(); } else { alert("Incorrect password."); document.getElementById('masterPasswordInput').value = ''; } };
@@ -610,6 +629,61 @@
   window.handleAddExpense = async function(e) { e.preventDefault(); const desc = document.getElementById('expDesc').value.trim(); const amount = parseFloat(document.getElementById('expAmount').value) || 0; const id = crypto.randomUUID(); try { await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString() }); logAudit(`Logged expense: ${desc} ($${amount.toFixed(2)})`); document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; await loadData(); } catch (error) { alert("Failed to add expense."); } };
   window.deleteExpense = async function(id) { if(confirm("Delete this expense?")) { await deleteDoc(doc(db, "fliptrack_expenses", id)); await loadData(); } };
   function renderExpenses() { const list = document.getElementById('expenseListBody'); list.innerHTML = ''; let totalExp = 0; expenseData.forEach(exp => { totalExp += exp.amount; const dateStr = new Date(exp.date).toLocaleDateString(); list.innerHTML += `<div class="expense-item"><div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--text-muted); font-size:11px; margin-left:8px;">${dateStr}</span></div><div style="display:flex; align-items:center; gap:10px;"><span style="color:var(--danger); font-weight:bold;">-$${exp.amount.toFixed(2)}</span><button class="danger" onclick="deleteExpense('${exp.id}')">X</button></div></div>`; }); if(expenseData.length === 0) list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">No expenses logged yet.</div>`; document.getElementById('stat-expenses').innerText = `-$${totalExp.toFixed(2)}`; return totalExp; }
+
+  // --- SCOUT MODAL LOGIC ---
+  window.openScoutModal = () => {
+    document.getElementById('scoutBrand').value = '';
+    document.getElementById('scoutModel').value = '';
+    document.getElementById('scoutSize').value = '';
+    document.getElementById('scoutKeywords').value = '';
+    document.getElementById('scoutOverlay').classList.add('active');
+  };
+  window.closeScoutModal = () => document.getElementById('scoutOverlay').classList.remove('active');
+
+  function getScoutQuery() {
+    const b = document.getElementById('scoutBrand').value.trim();
+    const m = document.getElementById('scoutModel').value.trim();
+    const s = document.getElementById('scoutSize').value.trim();
+    const k = document.getElementById('scoutKeywords').value.trim();
+    return encodeURIComponent(`${b} ${m} ${s} ${k}`.trim().replace(/\s+/g, ' '));
+  }
+
+  window.scoutEbay = () => {
+    const q = getScoutQuery();
+    if(!q) return alert("Enter something to search!");
+    window.open(`https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1`, '_blank');
+  };
+
+  window.scoutMercari = () => {
+    const q = getScoutQuery();
+    if(!q) return alert("Enter something to search!");
+    window.open(`https://www.mercari.com/search/?keyword=${q}`, '_blank');
+  };
+
+  window.scoutGoogle = () => {
+    const q = getScoutQuery();
+    if(!q) return alert("Enter something to search!");
+    window.open(`https://www.google.com/search?q=${q}`, '_blank');
+  };
+
+  window.convertScoutToItem = () => {
+    const b = document.getElementById('scoutBrand').value.trim();
+    const m = document.getElementById('scoutModel').value.trim();
+    const s = document.getElementById('scoutSize').value.trim();
+    const k = document.getElementById('scoutKeywords').value.trim();
+    
+    closeScoutModal();
+    openModal(); // launches Add Item modal
+    
+    document.getElementById('itemBrand').value = b;
+    document.getElementById('itemModel').value = m;
+    
+    // Construct a clean name out of whatever was typed
+    let constructedName = `${m} ${s} ${k}`.trim();
+    if (!constructedName) constructedName = b; 
+    
+    document.getElementById('itemName').value = constructedName;
+  };
 
   // --- SOLD ARCHIVE LOGIC ---
   window.openSoldModal = function() {
