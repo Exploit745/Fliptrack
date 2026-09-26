@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FlipTrack | Storefront</title>
+<!-- Obsidian Glass Typography -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #0B0E14;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-hover: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    
+    --accent-blue: #60A5FA;
+    --accent-purple: #A78BFA;
+    --accent-glow: rgba(96, 165, 250, 0.2);
+    
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --success: #34D399;
+    --danger: #F87171;
+
+    --shadow: 0 16px 40px rgba(0,0,0,0.4);
+    --blur: blur(16px);
+  }
+  
+  * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+  
+  body { 
+    margin: 0; 
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(circle at 15% 0%, rgba(167, 139, 250, 0.08), transparent 35%),
+      radial-gradient(circle at 85% 100%, rgba(96, 165, 250, 0.08), transparent 35%);
+    background-attachment: fixed;
+    color: var(--text-main); 
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  button, input, select { font: inherit; }
+  .wrap { width: 100%; max-width: 1200px; margin: auto; padding: 32px 24px; }
+  
+  /* HEADER */
+  header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 40px; flex-wrap: wrap; border-bottom: 1px solid var(--glass-border); padding-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 46px; height: 46px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; display: grid; place-items: center; color: var(--accent-purple); font-size: 1.4rem; font-weight: 900; box-shadow: var(--shadow); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+  .brand h1 { margin: 0; font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; }
+  .brand small { color: var(--text-muted); font-size: 13px; font-weight: 500; }
+  
+  .cart-toggle-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 12px 20px; border-radius: 12px; color: var(--text-main); font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; backdrop-filter: var(--blur); }
+  .cart-toggle-btn:hover { border-color: var(--accent-purple); box-shadow: 0 0 15px rgba(167, 139, 250, 0.2); }
+  .cart-badge { background: var(--accent-purple); color: #000; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 32px; background: var(--glass-bg); padding: 16px 24px; border-radius: 16px; border: 1px solid var(--glass-border); backdrop-filter: var(--blur); }
+  .search-wrapper { flex-grow: 1; display: flex; gap: 12px; max-width: 500px; }
+  
+  input, select { 
+    background: rgba(0,0,0,0.3); color: var(--text-main); 
+    border: 1px solid var(--glass-border); border-radius: 10px; 
+    padding: 12px 16px; outline: none; width: 100%; font-size: 14px; 
+    transition: all 0.2s; backdrop-filter: var(--blur);
+  }
+  input::placeholder { color: #475569; }
+  input:focus, select:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2); background: rgba(0,0,0,0.5); }
+
+  /* STORE GRID */
+  .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 64px 20px; color: var(--text-muted); font-size: 16px; background: var(--glass-bg); border-radius: 16px; border: 1px dashed var(--glass-border); }
+  
+  /* PRODUCT CARD */
+  .product-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .product-card:hover { transform: translateY(-4px); border-color: var(--accent-purple); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+  
+  .product-image-container {
+    height: 200px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05));
+    border-bottom: 1px solid var(--glass-border);
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-image-container img { width: 100%; height: 100%; object-fit: cover; }
+  .placeholder-icon { font-size: 48px; color: rgba(255,255,255,0.1); }
+  
+  .new-badge { position: absolute; top: 12px; right: 12px; background: var(--accent-blue); color: #000; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+
+  .product-details { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+  .product-brand { color: var(--accent-purple); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 4px; }
+  .product-title { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--text-main); }
+  
+  .product-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); gap: 10px; }
+  .product-price { font-size: 22px; font-weight: 800; color: var(--success); }
+  
+  button { 
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); 
+    padding: 10px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; 
+    font-weight: 600; font-size: 13px; backdrop-filter: var(--blur);
+  }
+  button:hover { background: var(--glass-hover); border-color: var(--accent-blue); }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: #000; border: none; font-weight: 700; }
+  .btn-primary:hover { background: linear-gradient(135deg, #7db3fa, #b8a1fa); transform: translateY(-1px); box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); border-color: transparent; }
+  .btn-success { background: var(--success); color: #000; border: none; font-weight: 700; }
+  .btn-success:hover { background: #10B981; transform: translateY(-1px); box-shadow: 0 0 20px rgba(52, 211, 153, 0.3); }
+
+  /* CART DRAWER */
+  .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+  .cart-overlay.active { opacity: 1; pointer-events: auto; }
+  
+  .cart-drawer { position: fixed; top: 0; right: -450px; width: 100%; max-width: 450px; height: 100vh; background: rgba(11, 14, 20, 0.95); border-left: 1px solid var(--glass-border); box-shadow: -10px 0 40px rgba(0,0,0,0.5); z-index: 2001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .cart-drawer.active { right: 0; }
+  
+  .cart-header { padding: 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+  .cart-header h2 { margin: 0; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  
+  .cart-items-container { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .cart-item { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; display: flex; gap: 16px; align-items: center; }
+  .cart-item-img { width: 60px; height: 60px; border-radius: 8px; background: rgba(0,0,0,0.4); display: grid; place-items: center; font-size: 24px; border: 1px solid var(--glass-border); overflow: hidden; flex-shrink: 0; }
+  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-item-details { flex-grow: 1; }
+  .cart-item-title { font-size: 14px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-main); line-height: 1.3; }
+  .cart-item-price { font-size: 15px; font-weight: 800; color: var(--success); margin: 0; }
+  .cart-item-remove { background: transparent; border: none; color: var(--danger); font-size: 20px; cursor: pointer; padding: 4px; border-radius: 6px; }
+  .cart-item-remove:hover { background: rgba(248, 113, 113, 0.1); }
+  
+  .cart-footer { padding: 24px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); }
+  .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .cart-total-label { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+  .cart-total-value { font-size: 28px; font-weight: 800; color: var(--success); }
+
+  /* PRODUCT MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 1000; opacity: 0; transition: opacity 0.2s; }
+  .modal-overlay.active { display: flex; opacity: 1; }
+  .modal { width: min(600px, 100%); max-height: 90vh; overflow-y: auto; background: rgba(11, 14, 20, 0.85); border: 1px solid var(--glass-border); border-radius: 20px; padding: 32px; box-shadow: var(--shadow); position: relative; }
+  
+  .close-btn { position: absolute; top: 24px; right: 24px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); font-size: 20px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; padding: 0; line-height: 1; z-index: 10; }
+  .close-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
+  
+  .modal-hero-img { width: calc(100% + 64px); margin: -32px -32px 24px -32px; height: 300px; background: rgba(0,0,0,0.5); display: none; place-items: center; font-size: 64px; border-bottom: 1px solid var(--glass-border); }
+  .modal-hero-img img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .modal-brand { color: var(--accent-purple); font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px; display: block;}
+  .modal-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 800; line-height: 1.2; }
+  .modal-price { font-size: 32px; font-weight: 800; color: var(--success); margin-bottom: 24px; display: block;}
+  
+  .modal-section-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 8px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }
+  .modal-desc { color: var(--text-main); font-size: 15px; line-height: 1.6; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); white-space: pre-wrap; margin-bottom: 32px; }
+  
+  .contact-box { display: flex; gap: 12px; flex-direction: column; }
+  .contact-box button { padding: 14px; font-size: 15px; width: 100%; }
+
+  @media(max-width: 768px){ 
+    .wrap { padding: 16px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .search-wrapper { max-width: 100%; }
+    .modal { padding: 24px; }
+    .modal-hero-img { width: calc(100% + 48px); margin: -24px -24px 20px -24px; height: 250px; }
+    .modal-title { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>
+        <h1>FlipTrack Supply</h1>
+        <small>Curated Vintage, Tech & Hard Goods</small>
+      </div>
+    </div>
+    <button class="cart-toggle-btn" onclick="toggleCart()">
+      🛒 Cart <span class="cart-badge" id="headerCartCount">0</span>
+    </button>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <input type="text" id="storeSearch" placeholder="Search brands, models, or items..." oninput="renderStore()">
+    </div>
+    <select id="storeSort" onchange="renderStore()" style="width: auto; min-width: 160px;">
+      <option value="newest">Newest Arrivals</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+      <option value="az">Name: A to Z</option>
+    </select>
+  </div>
+
+  <div class="store-grid" id="storeGrid">
+    <div class="empty-state">Loading inventory...</div>
+  </div>
+</div>
+
+<!-- PRODUCT DETAILS MODAL -->
+<div class="modal-overlay" id="productModal" onclick="closeOnOutsideClick(event, 'productModal')">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal()">&times;</button>
+    <div class="modal-hero-img" id="mHeroImg"></div>
+    <span class="modal-brand" id="mBrand">Brand</span>
+    <h2 class="modal-title" id="mTitle">Product Name</h2>
+    <span class="modal-price" id="mPrice">$0.00</span>
+    
+    <div class="modal-section-title">Condition & Details</div>
+    <div class="modal-desc" id="mDesc">No details provided.</div>
+    
+    <div class="contact-box">
+      <button class="btn-primary" id="btnAddToCartModal" onclick="addCurrentToCart()">🛒 Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h2>🛒 Your Cart</h2>
+    <button class="close-btn" style="position: relative; top: 0; right: 0;" onclick="toggleCart()">&times;</button>
+  </div>
+  
+  <div class="cart-items-container" id="cartItemsContainer">
+    <!-- Cart Items injected here -->
+  </div>
+  
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Grand Total</span>
+      <span class="cart-total-value" id="cartTotalValue">$0.00</span>
+    </div>
+    <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="checkoutCart()">Secure Checkout via Email</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = { 
+    apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs", 
+    authDomain: "fliptrack-2d4ec.firebaseapp.com", 
+    projectId: "fliptrack-2d4ec", 
+    storageBucket: "fliptrack-2d4ec.firebasestorage.app", 
+    messagingSenderId: "344166473976", 
+    appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", 
+    measurementId: "G-4XQLB5WCN" 
+  };
+  
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let storeInventory = [];
+  let currentItem = null;
+  
+  // Shopping Cart State
+  let cart = JSON.parse(localStorage.getItem('fliptrack_cart')) || [];
+  const STORE_EMAIL = "flickaffiliates@gmail.com"; 
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadStoreData();
+    updateCartUI();
+  });
+
+  async function loadStoreData() {
+    try {
+      const q = query(collection(db, "fliptrack_items"), where("status", "==", "Listed"));
+      const snap = await getDocs(q);
+      
+      storeInventory = [];
+      snap.forEach(doc => {
+        storeInventory.push({ id: doc.id, ...doc.data() });
+      });
+      
+      renderStore();
+    } catch (error) {
+      console.error("Error loading store data: ", error);
+      document.getElementById('storeGrid').innerHTML = `<div class="empty-state" style="color: var(--danger);">Failed to connect to inventory database.</div>`;
+    }
+  }
+
+  const formatMoney = n => (n === null || n === undefined || isNaN(n) || n === '') ? 'Make Offer' : '$' + parseFloat(n).toFixed(2);
+  const escapeHTML = s => String(s||'').replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+
+  function getPlaceholderIcon(cat) {
+    const text = (cat || '').toLowerCase();
+    if (text.includes('shirt') || text.includes('jacket') || text.includes('clothing')) return '👕';
+    if (text.includes('shoe') || text.includes('boot') || text.includes('sneaker')) return '👟';
+    if (text.includes('tech') || text.includes('walkman') || text.includes('apple')) return '📻';
+    if (text.includes('game') || text.includes('dvd') || text.includes('vhs')) return '📼';
+    return '📦';
+  }
+
+  window.renderStore = function() {
+    const grid = document.getElementById('storeGrid');
+    const search = document.getElementById('storeSearch').value.toLowerCase();
+    const sortMethod = document.getElementById('storeSort').value;
+    
+    grid.innerHTML = '';
+    
+    let filtered = storeInventory.filter(item => {
+      const searchStr = `${item.name} ${item.brand} ${item.model} ${item.notes}`.toLowerCase();
+      return searchStr.includes(search);
+    });
+
+    filtered.sort((a, b) => {
+      const priceA = parseFloat(a.expectedSale) || 0;
+      const priceB = parseFloat(b.expectedSale) || 0;
+      
+      if (sortMethod === 'price_asc') return priceA - priceB;
+      if (sortMethod === 'price_desc') return priceB - priceA;
+      if (sortMethod === 'az') return (a.name || '').localeCompare(b.name || '');
+      return new Date(b.date || 0) - new Date(a.date || 0);
+    });
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state">No items match your search.</div>`;
+      return;
+    }
+
+    filtered.forEach(item => {
+      const price = formatMoney(item.expectedSale);
+      const icon = getPlaceholderIcon(item.name + ' ' + item.brand);
+      const daysOld = item.date ? Math.floor((new Date() - new Date(item.date)) / 86400000) : 99;
+      const badgeHTML = daysOld <= 7 ? `<div class="new-badge">New Arrival</div>` : '';
+      const safeItem = escapeHTML(JSON.stringify(item));
+      const inCart = cart.find(c => c.id === item.id);
+      
+      // Image rendering logic
+      const mediaHTML = item.imageUrl 
+        ? `<img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.name)}">`
+        : `<div class="placeholder-icon">${icon}</div>`;
+
+      const btnHTML = inCart 
+        ? `<button class="btn-success" disabled>In Cart ✓</button>`
+        : `<button class="btn-primary" onclick="addToCart(this, event)" data-item="${safeItem}">Add to Cart</button>`;
+
+      grid.innerHTML += `
+        <div class="product-card" onclick="openProductModal(this)" data-item="${safeItem}">
+          <div class="product-image-container">
+            ${mediaHTML}
+            ${badgeHTML}
+          </div>
+          <div class="product-details">
+            <div class="product-brand">${escapeHTML(item.brand) || 'Unbranded'} ${item.model ? '• ' + escapeHTML(item.model) : ''}</div>
+            <h3 class="product-title">${escapeHTML(item.name)}</h3>
+            <div class="product-footer">
+              <span class="product-price">${price}</span>
+              ${btnHTML}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  };
+
+  window.openProductModal = function(element) {
+    try {
+      currentItem = JSON.parse(element.getAttribute('data-item'));
+      document.getElementById('mBrand').innerText = `${currentItem.brand || 'Unbranded'} ${currentItem.model ? '• ' + currentItem.model : ''}`;
+      document.getElementById('mTitle').innerText = currentItem.name || 'Unknown Item';
+      document.getElementById('mPrice').innerText = formatMoney(currentItem.expectedSale);
+      document.getElementById('mDesc').innerText = currentItem.notes || 'Good condition. Please contact for specific details or extra photos.';
+      
+      // Modal Image Logic
+      const heroContainer = document.getElementById('mHeroImg');
+      if (currentItem.imageUrl) {
+        heroContainer.innerHTML = `<img src="${escapeHTML(currentItem.imageUrl)}" alt="Product Image">`;
+        heroContainer.style.display = 'block';
+      } else {
+        heroContainer.style.display = 'none';
+      }
+
+      // Update button state based on cart
+      const modalBtn = document.getElementById('btnAddToCartModal');
+      const inCart = cart.find(c => c.id === currentItem.id);
+      if (inCart) {
+        modalBtn.innerText = "In Cart ✓";
+        modalBtn.className = "btn-success";
+        modalBtn.disabled = true;
+      } else {
+        modalBtn.innerText = "🛒 Add to Cart";
+        modalBtn.className = "btn-primary";
+        modalBtn.disabled = false;
+      }
+
+      document.getElementById('productModal').classList.add('active');
+    } catch(e) { console.error("Error opening item", e); }
+  };
+
+  window.closeModal = () => {
+    document.getElementById('productModal').classList.remove('active');
+    currentItem = null;
+  };
+
+  window.closeOnOutsideClick = (e, id) => { 
+    if (e.target.id === id) window.closeModal(); 
+  };
+
+  // --- CART LOGIC ---
+  window.toggleCart = () => {
+    document.getElementById('cartDrawer').classList.toggle('active');
+    document.getElementById('cartOverlay').classList.toggle('active');
+  };
+
+  window.addToCart = (btnElement, event) => {
+    if (event) event.stopPropagation(); // Prevent opening the modal when clicking the Add button
+    
+    let itemToAdd = currentItem;
+    if (btnElement) {
+       itemToAdd = JSON.parse(btnElement.getAttribute('data-item'));
+    }
+    
+    if(!itemToAdd) return;
+
+    if (!cart.find(c => c.id === itemToAdd.id)) {
+      cart.push(itemToAdd);
+      localStorage.setItem('fliptrack_cart', JSON.stringify(cart));
+      updateCartUI();
+      renderStore(); // Refresh buttons
+      
+      if (currentItem && currentItem.id === itemToAdd.id) {
+        const modalBtn = document.getElementById('btnAddToCartModal');
+        modalBtn.innerText = "In Cart ✓";
+        modalBtn.className = "btn-success";
+        modalBtn.disabled = true;
+      }
+    }
+  };
+  
+  window.addCurrentToCart = () => window.addToCart(null, null);
+
+  window.removeFromCart = (id) => {
+    cart = cart.filter(c => c.id !== id);
+    localStorage.setItem('fliptrack_cart', JSON.stringify(cart));
+    updateCartUI();
+    renderStore(); // Refresh store buttons to un-disable
+  };
+
+  function updateCartUI() {
+    const container = document.getElementById('cartItemsContainer');
+    document.getElementById('headerCartCount').innerText = cart.length;
+    
+    container.innerHTML = '';
+    let total = 0;
+
+    if (cart.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">Your cart is empty.</div>`;
+      document.getElementById('cartTotalValue').innerText = '$0.00';
+      return;
+    }
+
+    cart.forEach(item => {
+      const price = parseFloat(item.expectedSale) || 0;
+      total += price;
+      
+      const icon = getPlaceholderIcon(item.name + ' ' + item.brand);
+      const mediaHTML = item.imageUrl 
+        ? `<img src="${escapeHTML(item.imageUrl)}">`
+        : icon;
+
+      container.innerHTML += `
+        <div class="cart-item">
+          <div class="cart-item-img">${mediaHTML}</div>
+          <div class="cart-item-details">
+            <h4 class="cart-item-title">${escapeHTML(item.brand)} ${escapeHTML(item.name)}</h4>
+            <div class="cart-item-price">${formatMoney(price)}</div>
+          </div>
+          <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Remove">&times;</button>
+        </div>
+      `;
+    });
+
+    document.getElementById('cartTotalValue').innerText = formatMoney(total);
+  }
+
+  window.checkoutCart = () => {
+    if (cart.length === 0) return alert("Your cart is empty!");
+    
+    let total = 0;
+    let itemList = "";
+    
+    cart.forEach((item, index) => {
+      const price = parseFloat(item.expectedSale) || 0;
+      total += price;
+      itemList += `${index + 1}. ${item.brand || ''} ${item.name} (${formatMoney(price)})\n`;
+    });
+
+    const subject = encodeURIComponent(`Purchase Request: FlipTrack Store`);
+    const body = encodeURIComponent(`Hi,\n\I am interested in purchasing the following items from your store:\n\n${itemList}\nGrand Total: ${formatMoney(total)}\n\nPlease let me know how to proceed with payment and shipping.\n\nThanks!`);
+    
+    window.location.href = `mailto:${STORE_EMAIL}?subject=${subject}&body=${body}`;
+  };
+
+</script>
+</body>
+</html>
