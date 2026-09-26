@@ -402,6 +402,7 @@
     </div>
     <form id="itemForm" onsubmit="handleFormSubmit(event)">
       <input type="hidden" id="itemId">
+      <input type="hidden" id="existingImageUrl">
       <div class="form-grid">
         <div class="form-group full">
           <label style="display:flex; justify-content:space-between; align-items:flex-end;">
@@ -411,6 +412,18 @@
           <div id="reader" style="display:none; width: 100%; max-width: 400px; margin: 0 auto 10px auto; border-radius: 8px; overflow: hidden; border: 1px solid var(--accent-blue);"></div>
           <input type="text" id="itemName" required placeholder="e.g. Sony Walkman">
         </div>
+        
+        <!-- NEW IMAGE UPLOAD UI -->
+        <div class="form-group full" style="border: 1px dashed var(--glass-border); padding: 16px; border-radius: 12px; background: rgba(0,0,0,0.2);">
+          <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <span>Item Photo (Optional)</span>
+            <div id="imagePreviewContainer" style="display:none; width: 36px; height: 36px; border-radius: 6px; overflow: hidden; border: 1px solid var(--accent-blue);">
+              <img id="imagePreview" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          </label>
+          <input type="file" id="itemImage" accept="image/*" onchange="previewImage(event)" style="background: transparent; border: none; padding: 0;">
+        </div>
+
         <div class="form-group">
           <label>Brand</label>
           <input type="text" id="itemBrand" placeholder="Sony">
@@ -580,10 +593,12 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
   const firebaseConfig = { apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs", authDomain: "fliptrack-2d4ec.firebaseapp.com", projectId: "fliptrack-2d4ec", storageBucket: "fliptrack-2d4ec.firebasestorage.app", messagingSenderId: "344166473976", appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", measurementId: "G-4XQLB5WCN" };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   let inventory = []; let expenseData = []; let dbBolos = []; let selectedItems = new Set(); let profitChartInstance = null;
   const MASTER_PASSWORD = "thriftflip123"; 
@@ -732,7 +747,72 @@
   window.applyBulkStatus = async function() { if(selectedItems.size === 0) return; const newStatus = document.getElementById('bulkStatusSelect').value; if(!confirm(`Update ${selectedItems.size} items to '${newStatus}'?`)) return; const batch = writeBatch(db); selectedItems.forEach(id => batch.update(doc(db, "fliptrack_items", id), { status: newStatus })); await batch.commit(); logAudit(`Bulk updated ${selectedItems.size} items to '${newStatus}'`); selectedItems.clear(); updateBulkToolbar(); loadData(); };
   window.deleteSelected = async function() { if(selectedItems.size === 0) return; if(!confirm(`Permanently DELETE ${selectedItems.size} items?`)) return; const batch = writeBatch(db); selectedItems.forEach(id => batch.delete(doc(db, "fliptrack_items", id))); await batch.commit(); logAudit(`Bulk deleted ${selectedItems.size} items from database.`); selectedItems.clear(); updateBulkToolbar(); loadData(); };
 
-  window.handleFormSubmit = async function(e) { e.preventDefault(); const id = document.getElementById('itemId').value || crypto.randomUUID(); const isNew = !document.getElementById('itemId').value; const name = document.getElementById('itemName').value.trim(); if (!name) return alert('Give the item a name.'); const itemData = { name: name, brand: document.getElementById('itemBrand').value.trim(), model: document.getElementById('itemModel').value.trim(), date: document.getElementById('itemDate').value, status: document.getElementById('itemStatus').value, tier: document.getElementById('itemTier').value, cost: parseFloat(document.getElementById('itemCost').value) || 0, expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0, actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value), fees: parseFloat(document.getElementById('itemFees').value) || 0, shipping: parseFloat(document.getElementById('itemShipping').value) || 0, notes: document.getElementById('itemNotes').value.trim() }; await setDoc(doc(db, "fliptrack_items", id), itemData); logAudit(isNew ? `Added new item: ${name}` : `Updated item: ${name} (Status: ${itemData.status})`); closeModal(); loadData(); };
+  // --- IMAGE UPLOAD LOGIC ---
+  window.previewImage = function(e) {
+    const file = e.target.files[0];
+    const container = document.getElementById('imagePreviewContainer');
+    const img = document.getElementById('imagePreview');
+    if (file) {
+      img.src = URL.createObjectURL(file);
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+      img.src = '';
+    }
+  };
+
+  window.handleFormSubmit = async function(e) { 
+    e.preventDefault(); 
+    const id = document.getElementById('itemId').value || crypto.randomUUID(); 
+    const isNew = !document.getElementById('itemId').value; 
+    const name = document.getElementById('itemName').value.trim(); 
+    if (!name) return alert('Give the item a name.'); 
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    
+    let finalImageUrl = document.getElementById('existingImageUrl').value;
+    const file = document.getElementById('itemImage').files[0];
+
+    // Handle Image Upload Intercept
+    if (file) {
+      submitBtn.innerText = "Uploading Image...";
+      submitBtn.disabled = true;
+      try {
+        const storageRef = ref(storage, 'inventory/' + id);
+        await uploadBytes(storageRef, file);
+        finalImageUrl = await getDownloadURL(storageRef);
+      } catch (err) {
+        alert("Image upload failed: " + err.message);
+      }
+      submitBtn.innerText = originalText;
+      submitBtn.disabled = false;
+    }
+
+    const itemData = { 
+      name: name, 
+      brand: document.getElementById('itemBrand').value.trim(), 
+      model: document.getElementById('itemModel').value.trim(), 
+      date: document.getElementById('itemDate').value, 
+      status: document.getElementById('itemStatus').value, 
+      tier: document.getElementById('itemTier').value, 
+      cost: parseFloat(document.getElementById('itemCost').value) || 0, 
+      expectedSale: parseFloat(document.getElementById('itemExpected').value) || 0, 
+      actualSale: document.getElementById('itemActual').value === '' ? null : parseFloat(document.getElementById('itemActual').value), 
+      fees: parseFloat(document.getElementById('itemFees').value) || 0, 
+      shipping: parseFloat(document.getElementById('itemShipping').value) || 0, 
+      notes: document.getElementById('itemNotes').value.trim() 
+    }; 
+    
+    // Bind the image URL to the database payload
+    if (finalImageUrl) itemData.imageUrl = finalImageUrl;
+
+    await setDoc(doc(db, "fliptrack_items", id), itemData); 
+    logAudit(isNew ? `Added new item: ${name}` : `Updated item: ${name} (Status: ${itemData.status})`); 
+    closeModal(); 
+    loadData(); 
+  };
+  
   window.deleteItem = async function(id) { if (confirm('Delete this item?')) { const it = inventory.find(i=>i.id===id); await deleteDoc(doc(db, "fliptrack_items", id)); logAudit(`Deleted item: ${it ? it.name : id}`); loadData(); } };
 
   window.closeOnOutsideClick = (e, id) => { if (e.target.id === id) document.getElementById(id).classList.remove('active'); };
@@ -772,10 +852,24 @@
         const searchTerms = encodeURIComponent(`${item.brand || ''} ${item.model || ''} ${item.name || ''}`.trim());
         const compLink = `<a href="https://www.ebay.com/sch/i.html?_nkw=${searchTerms}&LH_Sold=1&LH_Complete=1" target="_blank" title="Check eBay Sold Comps" style="text-decoration:none; margin-left:8px; font-size:12px; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'">🔍</a>`;
 
+        // -- Thumbnail Injection --
+        const imgThumb = item.imageUrl 
+          ? `<img src="${escapeHTML(item.imageUrl)}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;">` 
+          : `<div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(0,0,0,0.3); display: grid; place-items: center; border: 1px solid var(--glass-border); flex-shrink: 0; font-size: 16px;">📦</div>`;
+
         tbody.innerHTML += `
           <tr class="${rowClass}">
             <td><input type="checkbox" class="row-checkbox" value="${item.id}" onchange="toggleRowSelection('${item.id}', this)" ${isChecked ? 'checked' : ''}></td>
-            <td><span class="item-main">${escapeHTML(item.name)}${compLink}</span><span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span><span class="tier-tag ${tClass}">${escapeHTML(item.tier || 'Quick Flip')}</span></td>
+            <td>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                ${imgThumb}
+                <div>
+                  <span class="item-main">${escapeHTML(item.name)}${compLink}</span>
+                  <span class="item-sub">${escapeHTML(item.brand)} ${item.model ? '• ' + escapeHTML(item.model) : ''}</span>
+                  <span class="tier-tag ${tClass}">${escapeHTML(item.tier || 'Quick Flip')}</span>
+                </div>
+              </div>
+            </td>
             <td class="hide-mobile" style="${ageStyle}">${diffDisplay}${ageIcon}</td>
             <td>${formatMoney(item.cost)}</td>
             <td>${formatMoney(item.expectedSale)}</td>
@@ -798,8 +892,38 @@
     updateBulkToolbar(); updateChart();
   }
 
-  window.openModal = function() { document.getElementById('itemForm').reset(); document.getElementById('itemId').value = ''; document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10); document.getElementById('itemTier').value = 'Quick Flip'; document.getElementById('modalTitle').innerText = 'Add Item'; document.getElementById('modalOverlay').classList.add('active'); };
-  window.editItem = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => { document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? ''; }); document.getElementById('modalTitle').innerText = 'Edit Item'; document.getElementById('modalOverlay').classList.add('active'); };
+  window.openModal = function() { 
+    document.getElementById('itemForm').reset(); 
+    document.getElementById('itemId').value = ''; 
+    document.getElementById('existingImageUrl').value = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('itemDate').value = new Date().toISOString().slice(0, 10); 
+    document.getElementById('itemTier').value = 'Quick Flip'; 
+    document.getElementById('modalTitle').innerText = 'Add Item'; 
+    document.getElementById('modalOverlay').classList.add('active'); 
+  };
+  
+  window.editItem = function(id) { 
+    const item = inventory.find(i => i.id === id); 
+    if (!item) return; 
+    ['itemId','itemName','itemBrand','itemModel','itemDate','itemStatus','itemTier','itemCost','itemExpected','itemActual','itemFees','itemShipping','itemNotes'].forEach(k => { 
+      document.getElementById(k).value = item[k.replace('item','').charAt(0).toLowerCase() + k.replace('item','').slice(1)] ?? ''; 
+    }); 
+    
+    // Load existing image into modal if it exists
+    document.getElementById('existingImageUrl').value = item.imageUrl || '';
+    if (item.imageUrl) {
+      document.getElementById('imagePreview').src = item.imageUrl;
+      document.getElementById('imagePreviewContainer').style.display = 'block';
+    } else {
+      document.getElementById('imagePreviewContainer').style.display = 'none';
+      document.getElementById('imagePreview').src = '';
+    }
+
+    document.getElementById('modalTitle').innerText = 'Edit Item'; 
+    document.getElementById('modalOverlay').classList.add('active'); 
+  };
   
   window.closeModal = () => {
     document.getElementById('modalOverlay').classList.remove('active');
