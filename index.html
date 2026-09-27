@@ -222,19 +222,7 @@
 
 <button class="fab" onclick="openModal()" title="Add Item">+</button>
 
-<div id="passOverlay">
-  <div class="glass-panel pass-card">
-    <div class="logo" style="margin: 0 auto 20px auto; width: 56px; height: 56px; font-size: 1.8rem;">⚡</div>
-    <h2 style="font-weight: 700; margin-bottom: 8px;">FlipTrack Security</h2>
-    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">Enter your master password to decrypt cloud inventory.</p>
-    <form class="pass-form" onsubmit="handlePasswordUnlock(event)">
-      <div class="form-group full">
-        <input type="password" id="masterPasswordInput" required placeholder="Enter master password...">
-      </div>
-      <button type="submit" class="primary" style="width: 100%; padding: 14px; margin-top: 16px;">Unlock Dashboard</button>
-    </form>
-  </div>
-</div>
+<div id="passOverlay" style="display: none;"></div>
 
 <div class="wrap">
   <header>
@@ -249,7 +237,8 @@
       <!-- Added Profile Indicator -->
       <div class="hide-mobile" style="display:flex; align-items:center; gap: 12px; margin-right: 8px; padding-right: 16px; border-right: 1px solid var(--glass-border);">
         <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--glass-hover); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 14px;">👤</div>
-        <span style="font-size: 13px; font-weight: 600; color: var(--text-main); letter-spacing: 0.02em;">USER</span>
+        <span id="userProfileTag" style="font-size: 13px; font-weight: 600; color: var(--text-main); letter-spacing: 0.02em;">USER</span>
+        <a onclick="authSignOut()" style="cursor:pointer; color:var(--danger); font-size:12px; margin-left:10px; font-weight: bold;">Logout</a>
       </div>
       <button onclick="window.location.href='csheet.html'">📊 CSheet</button>
       <button onclick="window.location.href='tools.html'" style="color: var(--accent-blue);">🛠️ Utilities</button>
@@ -592,16 +581,19 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, writeBatch, addDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = { apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs", authDomain: "fliptrack-2d4ec.firebaseapp.com", projectId: "fliptrack-2d4ec", storageBucket: "fliptrack-2d4ec.firebasestorage.app", messagingSenderId: "344166473976", appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", measurementId: "G-4XQLB5WCN" };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
+  const auth = getAuth(app);
 
   let inventory = []; let expenseData = []; let dbBolos = []; let selectedItems = new Set(); let profitChartInstance = null;
-  const MASTER_PASSWORD = "thriftflip123"; 
+  let currentUser = null;
+  let currentWorkspaceId = null;
 
   const defaultBolos = {
     'Clothes': ['Vintage Levi\'s (Silver/Orange Tab)', 'Arc\'teryx Jackets', 'Carhartt WIP', 'Vintage Coogi Sweaters', 'Pendleton Flannels'],
@@ -619,29 +611,87 @@
     if(e.key === 'Escape') { closeModal(); closeExpenseModal(); closeBoloModal(); closeTaxModal(); closeAuditModal(); closeSoldModal(); closeScoutModal(); }
   });
 
-  window.handlePasswordUnlock = function(e) { e.preventDefault(); if (document.getElementById('masterPasswordInput').value === MASTER_PASSWORD) { localStorage.setItem('fliptrack_unlocked', 'true'); document.getElementById('passOverlay').classList.add('hidden'); loadData(); } else { alert("Incorrect password."); document.getElementById('masterPasswordInput').value = ''; } };
-  window.lockApp = function() { localStorage.removeItem('fliptrack_unlocked'); document.getElementById('passOverlay').classList.remove('hidden'); document.getElementById('masterPasswordInput').value = ''; inventory = []; expenseData = []; renderTable(); };
-  window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('fliptrack_unlocked') === 'true') { document.getElementById('passOverlay').classList.add('hidden'); loadData(); } document.getElementById('goalTargetTxt').innerText = localStorage.getItem('fliptrack_goal') || 1000; });
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentWorkspaceId = userDoc.data().workspaceId;
+          document.getElementById('passOverlay').style.display = 'none';
+          if(document.getElementById('userProfileTag')) document.getElementById('userProfileTag').innerText = user.email.split('@')[0].toUpperCase();
+          loadData(); 
+        } else {
+          alert("Account error: No workspace assigned.");
+          authSignOut();
+        }
+      } catch (err) {
+        console.error("Workspace access denied:", err);
+      }
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
 
+  window.authSignOut = () => { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+
+  window.addEventListener('DOMContentLoaded', () => { document.getElementById('goalTargetTxt').innerText = localStorage.getItem('fliptrack_goal') || 1000; });
   window.updateGoal = function() { const currentGoal = localStorage.getItem('fliptrack_goal') || 1000; const newGoal = prompt("Set your new monthly net profit goal ($):", currentGoal); if(newGoal && !isNaN(newGoal)) { localStorage.setItem('fliptrack_goal', newGoal); document.getElementById('goalTargetTxt').innerText = newGoal; renderTable(); } };
 
-  async function loadData() { try { const [itemSnap, expSnap] = await Promise.all([ getDocs(collection(db, "fliptrack_items")), getDocs(collection(db, "fliptrack_expenses")) ]); inventory = []; itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() })); expenseData = []; expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() })); renderTable(); renderExpenses(); if(window.renderSoldTable) window.renderSoldTable(); } catch (error) { console.error("Error loading data: ", error); } }
+  async function loadData() { 
+    if(!currentWorkspaceId) return;
+    try { 
+      const itemQ = query(collection(db, "fliptrack_items"), where("workspaceId", "==", currentWorkspaceId));
+      const expQ = query(collection(db, "fliptrack_expenses"), where("workspaceId", "==", currentWorkspaceId));
+      const [itemSnap, expSnap] = await Promise.all([ getDocs(itemQ), getDocs(expQ) ]); 
+      inventory = []; itemSnap.forEach(d => inventory.push({ id: d.id, ...d.data() })); 
+      expenseData = []; expSnap.forEach(d => expenseData.push({ id: d.id, ...d.data() })); 
+      renderTable(); renderExpenses(); if(window.renderSoldTable) window.renderSoldTable(); 
+    } catch (error) { console.error("Error loading data: ", error); } 
+  }
 
-  async function logAudit(actionString) { try { await addDoc(collection(db, "fliptrack_audit"), { action: actionString, date: new Date().toISOString() }); } catch (e) { console.error(e); } }
+  async function logAudit(actionString) { 
+    if(!currentWorkspaceId) return;
+    try { await addDoc(collection(db, "fliptrack_audit"), { action: actionString, date: new Date().toISOString(), workspaceId: currentWorkspaceId, user: currentUser.email }); } catch (e) { console.error(e); } 
+  }
 
-  window.openAuditModal = async function() { document.getElementById('auditOverlay').classList.add('active'); const container = document.getElementById('auditListContainer'); container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading audit logs...</div>`; try { const snap = await getDocs(collection(db, "fliptrack_audit")); let logs = []; snap.forEach(d => logs.push(d.data())); logs.sort((a, b) => new Date(b.date) - new Date(a.date)); logs = logs.slice(0, 50); container.innerHTML = ''; if(logs.length === 0) container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">No activity logged yet.</div>`; logs.forEach(log => { const d = new Date(log.date); container.innerHTML += `<div class="audit-item"><span>${escapeHTML(log.action)}</span><span class="audit-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`; }); } catch (e) { container.innerHTML = `<div style="color:var(--danger);">Failed to load logs.</div>`; } };
+  window.openAuditModal = async function() { 
+    document.getElementById('auditOverlay').classList.add('active'); 
+    const container = document.getElementById('auditListContainer'); 
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading audit logs...</div>`; 
+    try { 
+      const q = query(collection(db, "fliptrack_audit"), where("workspaceId", "==", currentWorkspaceId));
+      const snap = await getDocs(q); 
+      let logs = []; snap.forEach(d => logs.push(d.data())); logs.sort((a, b) => new Date(b.date) - new Date(a.date)); logs = logs.slice(0, 50); 
+      container.innerHTML = ''; if(logs.length === 0) container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">No activity logged yet.</div>`; 
+      logs.forEach(log => { const d = new Date(log.date); container.innerHTML += `<div class="audit-item"><span>${escapeHTML(log.action)}</span><span class="audit-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`; }); 
+    } catch (e) { container.innerHTML = `<div style="color:var(--danger);">Failed to load logs.</div>`; } 
+  };
   window.closeAuditModal = () => document.getElementById('auditOverlay').classList.remove('active');
 
-  window.openBoloModal = async function() { document.getElementById('boloOverlay').classList.add('active'); try { const snap = await getDocs(collection(db, "fliptrack_bolos")); dbBolos = []; snap.forEach(d => dbBolos.push(d.data())); renderBolos(); } catch (e) { console.error(e); } };
+  window.openBoloModal = async function() { 
+    document.getElementById('boloOverlay').classList.add('active'); 
+    try { 
+      const q = query(collection(db, "fliptrack_bolos"), where("workspaceId", "==", currentWorkspaceId));
+      const snap = await getDocs(q); 
+      dbBolos = []; snap.forEach(d => dbBolos.push(d.data())); renderBolos(); 
+    } catch (e) { console.error(e); } 
+  };
   window.closeBoloModal = () => document.getElementById('boloOverlay').classList.remove('active');
-  window.handleAddBolo = async function(e) { e.preventDefault(); const name = document.getElementById('newBoloName').value.trim(); const cat = document.getElementById('newBoloCat').value; if(!name) return; try { await addDoc(collection(db, "fliptrack_bolos"), { name, category: cat }); document.getElementById('newBoloName').value = ''; dbBolos.push({ name, category: cat }); renderBolos(); logAudit(`Added '${name}' to BOLO Watchlist`); } catch (e) { alert("Failed to add BOLO."); } };
+  window.handleAddBolo = async function(e) { 
+    e.preventDefault(); const name = document.getElementById('newBoloName').value.trim(); const cat = document.getElementById('newBoloCat').value; if(!name) return; 
+    try { await addDoc(collection(db, "fliptrack_bolos"), { name, category: cat, workspaceId: currentWorkspaceId }); document.getElementById('newBoloName').value = ''; dbBolos.push({ name, category: cat }); renderBolos(); logAudit(`Added '${name}' to BOLO Watchlist`); } catch (e) { alert("Failed to add BOLO."); } 
+  };
   function renderBolos() { const container = document.getElementById('boloGridContainer'); container.innerHTML = ''; let renderData = JSON.parse(JSON.stringify(defaultBolos)); dbBolos.forEach(b => { if(!renderData[b.category]) renderData[b.category] = []; renderData[b.category].push({ custom: true, name: b.name }); }); Object.keys(renderData).forEach(cat => { const items = renderData[cat]; if(items.length === 0) return; let listHTML = items.map(item => { if(typeof item === 'string') return `<li>${escapeHTML(item)}</li>`; return `<li class="custom-bolo">⚡ ${escapeHTML(item.name)}</li>`; }).join(''); container.innerHTML += `<div class="bolo-cat"><h4>${cat}</h4><ul>${listHTML}</ul></div>`; }); }
 
   window.openTaxModal = function() { document.getElementById('taxOverlay').classList.add('active'); let grossSales = 0, cogs = 0, sellingFees = 0, shippingCosts = 0; inventory.forEach(i => { if(i.status === 'Sold') { grossSales += (parseFloat(i.actualSale) || 0); cogs += (parseFloat(i.cost) || 0); sellingFees += (parseFloat(i.fees) || 0); shippingCosts += (parseFloat(i.shipping) || 0); } }); let overhead = expenseData.reduce((acc, curr) => acc + curr.amount, 0); let totalDeductions = cogs + sellingFees + shippingCosts + overhead; let netTaxable = grossSales - totalDeductions; const container = document.getElementById('taxDataContainer'); container.innerHTML = `<div class="tax-row"><span>Gross Sales Revenue (1099-K)</span> <span>${formatMoney(grossSales)}</span></div><div class="tax-row" style="color:var(--text-muted);"><span>- Cost of Goods Sold (COGS)</span> <span>${formatMoney(cogs)}</span></div><div class="tax-row" style="color:var(--text-muted);"><span>- Platform Fees</span> <span>${formatMoney(sellingFees)}</span></div><div class="tax-row" style="color:var(--text-muted);"><span>- Shipping Labels</span> <span>${formatMoney(shippingCosts)}</span></div><div class="tax-row" style="color:var(--text-muted);"><span>- Overhead Expenses (Supplies)</span> <span>${formatMoney(overhead)}</span></div><div class="tax-row total" style="color: ${netTaxable >= 0 ? 'var(--success)' : 'var(--danger)'};"><span>Estimated Net Taxable Income</span> <span>${formatMoney(netTaxable)}</span></div>`; };
   window.closeTaxModal = () => document.getElementById('taxOverlay').classList.remove('active');
 
   window.openExpenseModal = () => document.getElementById('expenseOverlay').classList.add('active'); window.closeExpenseModal = () => document.getElementById('expenseOverlay').classList.remove('active');
-  window.handleAddExpense = async function(e) { e.preventDefault(); const desc = document.getElementById('expDesc').value.trim(); const amount = parseFloat(document.getElementById('expAmount').value) || 0; const id = crypto.randomUUID(); try { await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString() }); logAudit(`Logged expense: ${desc} ($${amount.toFixed(2)})`); document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; await loadData(); } catch (error) { alert("Failed to add expense."); } };
+  window.handleAddExpense = async function(e) { 
+    e.preventDefault(); const desc = document.getElementById('expDesc').value.trim(); const amount = parseFloat(document.getElementById('expAmount').value) || 0; const id = crypto.randomUUID(); 
+    try { await setDoc(doc(db, "fliptrack_expenses", id), { desc, amount, date: new Date().toISOString(), workspaceId: currentWorkspaceId }); logAudit(`Logged expense: ${desc} ($${amount.toFixed(2)})`); document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; await loadData(); } catch (error) { alert("Failed to add expense."); } 
+  };
   window.deleteExpense = async function(id) { if(confirm("Delete this expense?")) { await deleteDoc(doc(db, "fliptrack_expenses", id)); await loadData(); } };
   function renderExpenses() { const list = document.getElementById('expenseListBody'); list.innerHTML = ''; let totalExp = 0; expenseData.forEach(exp => { totalExp += exp.amount; const dateStr = new Date(exp.date).toLocaleDateString(); list.innerHTML += `<div class="expense-item"><div><strong>${escapeHTML(exp.desc)}</strong> <span style="color:var(--text-muted); font-size:11px; margin-left:8px;">${dateStr}</span></div><div style="display:flex; align-items:center; gap:10px;"><span style="color:var(--danger); font-weight:bold;">-$${exp.amount.toFixed(2)}</span><button class="danger" onclick="deleteExpense('${exp.id}')">X</button></div></div>`; }); if(expenseData.length === 0) list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">No expenses logged yet.</div>`; document.getElementById('stat-expenses').innerText = `-$${totalExp.toFixed(2)}`; return totalExp; }
 
@@ -779,7 +829,7 @@
       submitBtn.innerText = "Uploading Image...";
       submitBtn.disabled = true;
       try {
-        const storageRef = ref(storage, 'inventory/' + id);
+        const storageRef = ref(storage, `inventory/${currentWorkspaceId}/${id}`);
         await uploadBytes(storageRef, file);
         finalImageUrl = await getDownloadURL(storageRef);
       } catch (err) {
@@ -790,6 +840,7 @@
     }
 
     const itemData = { 
+      workspaceId: currentWorkspaceId,
       name: name, 
       brand: document.getElementById('itemBrand').value.trim(), 
       model: document.getElementById('itemModel').value.trim(), 
@@ -934,7 +985,21 @@
   };
   
   window.exportCSV = function() { if (inventory.length === 0) return alert('No inventory to export.'); logAudit('Exported CSV of database'); const rows = inventory.map(i => [`"${escapeHTML(i.name)}"`,`"${escapeHTML(i.brand)}"`,`"${escapeHTML(i.model)}"`,`"${escapeHTML(i.tier)}"`,`"${i.date}"`,i.cost||0,i.expectedSale||0,i.actualSale||'',i.fees||0,i.shipping||0,calculateProfit(i),i.status,`"${escapeHTML(i.notes).replace(/"/g, '""')}"`].join(',')); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([['Item,Brand,Model,Tier,Purchase Date,Cost,Expected Sale,Actual Sale,Fees,Shipping,Profit,Status,Notes', ...rows].join('\n')], { type: 'text/csv' })); link.download = 'fliptrack-inventory.csv'; link.click(); };
-  window.handleCSVImport = async function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async function(evt) { const lines = evt.target.result.split('\n').filter(l => l.trim() !== ''); if(lines.length < 2) return; if(!confirm(`Import ${lines.length - 1} items?`)) { document.getElementById('csvUpload').value = ''; return; } const batch = writeBatch(db); for(let i = 1; i < lines.length; i++) { const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"\vert{}"$/g, '').trim()); if(row.length < 3) continue; const id = crypto.randomUUID(); batch.set(doc(db, "fliptrack_items", id), { name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'' }); } try { await batch.commit(); logAudit(`Bulk imported ${lines.length - 1} items from CSV.`); alert("Bulk import successful!"); document.getElementById('csvUpload').value = ''; loadData(); } catch (err) { alert("Import failed."); } }; reader.readAsText(file); };
+  window.handleCSVImport = async function(e) { 
+    const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); 
+    reader.onload = async function(evt) { 
+      const lines = evt.target.result.split('\n').filter(l => l.trim() !== ''); 
+      if(lines.length < 2) return; if(!confirm(`Import ${lines.length - 1} items?`)) { document.getElementById('csvUpload').value = ''; return; } 
+      const batch = writeBatch(db); 
+      for(let i = 1; i < lines.length; i++) { 
+        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"\vert{}"$/g, '').trim()); 
+        if(row.length < 3) continue; const id = crypto.randomUUID(); 
+        batch.set(doc(db, "fliptrack_items", id), { name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'', workspaceId: currentWorkspaceId }); 
+      } 
+      try { await batch.commit(); logAudit(`Bulk imported ${lines.length - 1} items from CSV.`); alert("Bulk import successful!"); document.getElementById('csvUpload').value = ''; loadData(); } catch (err) { alert("Import failed."); } 
+    }; 
+    reader.readAsText(file); 
+  };
   window.copyListingTemplate = function(id) { const item = inventory.find(i => i.id === id); if (!item) return; const template = `🔥 ${item.brand ? item.brand + ' ' : ''}${item.name}${item.model ? ' ' + item.model : ''} 🔥\n\nBrand: ${item.brand || 'N/A'}\nModel: ${item.model || 'N/A'}\nCondition / Notes: ${item.notes || 'Tested and working. Clean condition.'}\nPrice: ${item.expectedSale ? '$'+parseFloat(item.expectedSale).toFixed(2) : 'N/A'}\n\nMessage if interested!`; navigator.clipboard.writeText(template).then(() => alert(`Copied template for "${item.name}"!`)); };
 
   // --- BARCODE SCANNER LOGIC ---
