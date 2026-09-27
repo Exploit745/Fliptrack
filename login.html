@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FlipTrack | Authenticate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #0B0E14;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-hover: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent-blue: #60A5FA;
+    --accent-purple: #A78BFA;
+    --accent-glow: rgba(96, 165, 250, 0.2);
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --danger: #F87171;
+    --shadow: 0 16px 40px rgba(0,0,0,0.4);
+    --blur: blur(16px);
+  }
+  
+  * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+  
+  body { 
+    margin: 0; 
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(circle at 15% 0%, rgba(167, 139, 250, 0.08), transparent 35%),
+      radial-gradient(circle at 85% 100%, rgba(96, 165, 250, 0.08), transparent 35%);
+    background-attachment: fixed;
+    color: var(--text-main); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .auth-container {
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .logo { 
+    width: 56px; height: 56px; 
+    background: var(--glass-bg); 
+    border: 1px solid var(--glass-border); 
+    border-radius: 14px; 
+    display: grid; place-items: center; 
+    color: var(--accent-blue); font-size: 1.8rem; font-weight: 900; 
+    box-shadow: var(--shadow); 
+    margin: 0 auto 24px auto;
+  }
+
+  h1 { margin: 0 0 8px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+  p { margin: 0 0 32px 0; color: var(--text-muted); font-size: 14px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 16px; }
+  .form-group label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  
+  input { 
+    background: rgba(0,0,0,0.3); color: var(--text-main); 
+    border: 1px solid var(--glass-border); border-radius: 10px; 
+    padding: 14px; outline: none; width: 100%; font-size: 14px; 
+    transition: all 0.2s; font-family: inherit;
+  }
+  input::placeholder { color: #475569; }
+  input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--accent-glow); background: rgba(0,0,0,0.5); }
+
+  button { 
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); 
+    color: #000; border: none; font-weight: 700; 
+    padding: 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; 
+    font-size: 15px; margin-top: 10px;
+  }
+  button:hover { 
+    background: linear-gradient(135deg, #7db3fa, #b8a1fa);
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); transform: translateY(-1px);
+  }
+  button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+  .toggle-text {
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .toggle-text a {
+    color: var(--accent-blue);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .toggle-text a:hover { text-decoration: underline; color: #7db3fa; }
+
+  #errorBox {
+    color: var(--danger);
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-container">
+  <div class="logo">⚡</div>
+  <h1 id="authTitle">Welcome Back</h1>
+  <p id="authSubtitle">Log in to your FlipTrack dashboard.</p>
+
+  <div id="errorBox"></div>
+
+  <form id="authForm">
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" required placeholder="name@domain.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" required placeholder="••••••••">
+    </div>
+    <button type="submit" id="submitBtn">Sign In</button>
+  </form>
+
+  <div class="toggle-text" id="toggleMode">
+    Don't have a workspace? <a onclick="switchMode()">Create one</a>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = { apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs", authDomain: "fliptrack-2d4ec.firebaseapp.com", projectId: "fliptrack-2d4ec", storageBucket: "fliptrack-2d4ec.firebasestorage.app", messagingSenderId: "344166473976", appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", measurementId: "G-4XQLB5WCN" };
+  
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let isLoginMode = true;
+
+  // Auto-redirect if already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) window.location.href = 'index.html';
+  });
+
+  window.switchMode = () => {
+    isLoginMode = !isLoginMode;
+    const title = document.getElementById('authTitle');
+    const subtitle = document.getElementById('authSubtitle');
+    const btn = document.getElementById('submitBtn');
+    const toggle = document.getElementById('toggleMode');
+    const err = document.getElementById('errorBox');
+    
+    err.style.display = 'none';
+
+    if (isLoginMode) {
+      title.innerText = "Welcome Back";
+      subtitle.innerText = "Log in to your FlipTrack dashboard.";
+      btn.innerText = "Sign In";
+      toggle.innerHTML = `Don't have a workspace? <a onclick="switchMode()">Create one</a>`;
+    } else {
+      title.innerText = "Initialize Workspace";
+      subtitle.innerText = "Set up your independent seller dashboard.";
+      btn.innerText = "Create Account";
+      toggle.innerHTML = `Already have an account? <a onclick="switchMode()">Log in</a>`;
+    }
+  };
+
+  function showError(msg) {
+    const errBox = document.getElementById('errorBox');
+    errBox.innerText = msg;
+    errBox.style.display = 'block';
+  }
+
+  document.getElementById('authForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    const btn = document.getElementById('submitBtn');
+    
+    btn.disabled = true;
+    btn.innerText = "Authenticating...";
+    document.getElementById('errorBox').style.display = 'none';
+
+    try {
+      if (isLoginMode) {
+        // LOGIN
+        await signInWithEmailAndPassword(auth, email, pass);
+        // Auth listener will handle the redirect
+      } else {
+        // REGISTER
+        btn.innerText = "Provisioning Workspace...";
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const user = userCredential.user;
+
+        // 1. Generate a new workspace document
+        const newWorkspaceRef = await addDoc(collection(db, "workspaces"), {
+          name: email.split('@')[0] + "'s Store",
+          owner: user.uid,
+          members: [user.uid], // Critical for the Firestore Security Rules
+          createdAt: new Date().toISOString()
+        });
+
+        // 2. Map the user to this workspace in the 'users' collection
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          workspaceId: newWorkspaceRef.id,
+          role: "owner"
+        });
+
+        // Auth listener will catch the login state and redirect to index.html
+      }
+    } catch (error) {
+      console.error(error);
+      let errMsg = "Authentication failed.";
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') errMsg = "Incorrect email or password.";
+      if (error.code === 'auth/email-already-in-use') errMsg = "An account with this email already exists.";
+      if (error.code === 'auth/weak-password') errMsg = "Password must be at least 6 characters.";
+      showError(errMsg);
+      btn.disabled = false;
+      btn.innerText = isLoginMode ? "Sign In" : "Create Account";
+    }
+  });
+</script>
+
+</body>
+</html>
