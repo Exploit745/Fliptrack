@@ -155,10 +155,14 @@
   const db = getFirestore(app);
 
   let isLoginMode = true;
+  let isRegistering = false; // Flag to stop premature redirects
 
   // Auto-redirect if already logged in
   onAuthStateChanged(auth, (user) => {
-    if (user) window.location.href = 'index.html';
+    // Only redirect if we aren't currently building the workspace documents
+    if (user && !isRegistering) {
+        window.location.href = 'index.html';
+    }
   });
 
   window.switchMode = () => {
@@ -204,9 +208,10 @@
       if (isLoginMode) {
         // LOGIN
         await signInWithEmailAndPassword(auth, email, pass);
-        // Auth listener will handle the redirect
+        window.location.href = 'index.html';
       } else {
         // REGISTER
+        isRegistering = true; // Tell the auth listener to hold off
         btn.innerText = "Provisioning Workspace...";
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
@@ -215,7 +220,7 @@
         const newWorkspaceRef = await addDoc(collection(db, "workspaces"), {
           name: email.split('@')[0] + "'s Store",
           owner: user.uid,
-          members: [user.uid], // Critical for the Firestore Security Rules
+          members: [user.uid], 
           createdAt: new Date().toISOString()
         });
 
@@ -226,9 +231,11 @@
           role: "owner"
         });
 
-        // Auth listener will catch the login state and redirect to index.html
+        // Setup complete. Now we can safely move to the dashboard.
+        window.location.href = 'index.html';
       }
     } catch (error) {
+      isRegistering = false; // Reset if it failed
       console.error(error);
       let errMsg = "Authentication failed.";
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') errMsg = "Incorrect email or password.";
