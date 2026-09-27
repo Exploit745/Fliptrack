@@ -234,7 +234,7 @@
       </div>
     </div>
     <div class="actions header-actions">
-      <!-- Added Profile Indicator -->
+      <!-- Restored Profile Indicator -->
       <div class="hide-mobile" style="display:flex; align-items:center; gap: 12px; margin-right: 8px; padding-right: 16px; border-right: 1px solid var(--glass-border);">
         <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--glass-hover); border: 1px solid var(--glass-border); display: grid; place-items: center; font-size: 14px;">👤</div>
         <span id="userProfileTag" style="font-size: 13px; font-weight: 600; color: var(--text-main); letter-spacing: 0.02em;">USER</span>
@@ -248,6 +248,7 @@
       <button onclick="openTaxModal()" style="color: var(--success);">📄 Tax Prep</button>
       <button onclick="openAuditModal()" style="color: var(--text-muted);">📜 Logs</button>
       <button class="special" onclick="openExpenseModal()">💸 Overhead</button>
+      <button onclick="exportCSV()" class="btn-label" style="background: rgba(0,0,0,0.3);">Export CSV</button>
       <label for="csvUpload" class="btn-label">Import CSV</label>
       <input type="file" id="csvUpload" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
       <button class="primary add-btn-desktop" onclick="openModal()">+ Add Item</button>
@@ -585,7 +586,7 @@
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUx3-lLWs", authDomain: "fliptrack-2d4ec.firebaseapp.com", projectId: "fliptrack-2d4ec", storageBucket: "fliptrack-2d4ec.firebasestorage.app", messagingSenderId: "344166473976", appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", measurementId: "G-4XQLB5WCN" };
+  const firebaseConfig = { apiKey: "AIzaSyB5jboDrl-aj4X-qS5k4akJTVUXa3-lLWs", authDomain: "fliptrack-2d4ec.firebaseapp.com", projectId: "fliptrack-2d4ec", storageBucket: "fliptrack-2d4ec.firebasestorage.app", messagingSenderId: "344166473976", appId: "1:344166473976:web:faf94d34a4bf1ebe1f1b0d", measurementId: "G-4XQLB5WCN" };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const storage = getStorage(app);
@@ -635,7 +636,10 @@
 
   window.authSignOut = () => { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
 
-  window.addEventListener('DOMContentLoaded', () => { document.getElementById('goalTargetTxt').innerText = localStorage.getItem('fliptrack_goal') || 1000; });
+  window.addEventListener('DOMContentLoaded', () => { 
+    document.getElementById('goalTargetTxt').innerText = localStorage.getItem('fliptrack_goal') || 1000; 
+  });
+  
   window.updateGoal = function() { const currentGoal = localStorage.getItem('fliptrack_goal') || 1000; const newGoal = prompt("Set your new monthly net profit goal ($):", currentGoal); if(newGoal && !isNaN(newGoal)) { localStorage.setItem('fliptrack_goal', newGoal); document.getElementById('goalTargetTxt').innerText = newGoal; renderTable(); } };
 
   async function loadData() { 
@@ -994,7 +998,7 @@
       for(let i = 1; i < lines.length; i++) { 
         const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"\vert{}"$/g, '').trim()); 
         if(row.length < 3) continue; const id = crypto.randomUUID(); 
-        batch.set(doc(db, "fliptrack_items", id), { name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'', workspaceId: currentWorkspaceId }); 
+        batch.set(doc(db, "fliptrack_items", id), { workspaceId: currentWorkspaceId, name: row[0]||'Unk', brand: row[1]||'', model: row[2]||'', tier: row[3]||'Quick Flip', date: row[4]||new Date().toISOString().slice(0, 10), cost: parseFloat(row[5])||0, expectedSale: parseFloat(row[6])||0, actualSale: parseFloat(row[7])||null, fees: parseFloat(row[8])||0, shipping: parseFloat(row[9])||0, status: row[11]||'Purchased', notes: row[12]||'' }); 
       } 
       try { await batch.commit(); logAudit(`Bulk imported ${lines.length - 1} items from CSV.`); alert("Bulk import successful!"); document.getElementById('csvUpload').value = ''; loadData(); } catch (err) { alert("Import failed."); } 
     }; 
